@@ -12,10 +12,10 @@
 |  Name: |Email:   |Role:   |
 |---|---|---|
 | Carine Rotich  |  crotich@my.waketech.edu    | Team Project Manager/Scrum Master  |
-| Donovan Ester  |  dester@my.waketech.edu     |  Undecided |
-| Kameron Smith  |  ksmith46@my.waketech.edu   |  Undecided |
+| Donovan Ester  |  dester@my.waketech.edu     |  Backend Programmer |
+| Kameron Smith  |  ksmith46@my.waketech.edu   |  QA/Programmer |
 | Ethan Bevier   |  etbevier@my.waketech.edu   |  Undecided |
-| CJ Coronado    |  cjcoronado@my.waketech.edu |  Undecided |
+| CJ Coronado    |  cjcoronado@my.waketech.edu |  Database Designer |
 | Robert Snyder  |  rjsnyder@my.waketech.edu   |  Undecided |
 | Jiayu Zhang    | jzhang11@my.waketech.edu    |  Undecided |
 
