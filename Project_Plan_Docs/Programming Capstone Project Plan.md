@@ -16,7 +16,7 @@
 | Kameron Smith  |  ksmith46@my.waketech.edu   |  QA/Programmer |
 | Ethan Bevier   |  etbevier@my.waketech.edu   |  Undecided |
 | CJ Coronado    |  cjcoronado@my.waketech.edu |  Database Designer |
-| Robert Snyder  |  rjsnyder@my.waketech.edu   |  Undecided |
+| Robert Snyder  |  rjsnyder@my.waketech.edu   |  Q/A programmer |
 | Jiayu Zhang    | jzhang11@my.waketech.edu    |  Undecided |
 
 ### Project Goal:
