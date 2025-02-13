@@ -16,7 +16,7 @@
 | Ethan Bevier   |  etbevier@my.waketech.edu   |  General Programmer |
 | CJ Coronado    |  cjcoronado@my.waketech.edu |  Database Designer |
 | Robert Snyder  |  rjsnyder@my.waketech.edu   |  Q/A programmer |
-| Jiayu Zhang    | jzhang11@my.waketech.edu    |  Undecided |
+| Jiayu Zhang    | jzhang11@my.waketech.edu    |  UI programmer/designer |
 
 ### Project Goal:
 The goal of this project is to make an easy-to-use inventory management system that will please our customers.
@@ -71,5 +71,7 @@ The goal of this project is to make an easy-to-use inventory management system t
 - Development will be divided into **sprints**, each lasting approximately two weeks.
 - Weekly meetings will ensure transparency and issue resolution.
 - **Trello** will be used to track tasks, assign responsibilities, and monitor progress.
+
+### Risk Management:
 
 
