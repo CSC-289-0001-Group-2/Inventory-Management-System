@@ -8,7 +8,7 @@
             "name": "Debug",
             "program": "${workspaceFolder}/birtuild/debug.exe",
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}/Assets/scripts"
         }
     ]
 }
