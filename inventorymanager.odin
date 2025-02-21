@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:sort"
 
 // Create a dynamic array of type "Item"
 item_inventory: [dynamic]Item
@@ -27,12 +28,17 @@ RemoveItem :: proc (itemName: string) {
 
 // Method to search for an item in the array
 FindItem :: proc(itemName: string) {
-    
+    if sort.find(item_inventory, itemName){
+        fmt.println("Item found")
+    }
+    else{
+        fmt.println("Item not found")
+    }
 }
 
 // Method to update the amount of an item in the array
 UpdateAmount :: proc(itemName: string, newAmount: int) {
-
+    item_inventory[itemName].amount = newAmount
 }
 
 // Method that adds up the total value of the inventory
