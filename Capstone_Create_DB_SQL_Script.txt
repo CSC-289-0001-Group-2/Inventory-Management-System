@@ -1,0 +1,61 @@
+CREATE DATABASE InventoryDB;
+USE InventoryDB;
+
+CREATE TABLE Manufacturer (
+    ManufacturerID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL UNIQUE,
+    AbbreviatedName VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE Item (
+    ItemID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL,
+    UnitsAvailable INT NOT NULL DEFAULT 0,
+    ManufacturerID INT,
+    FOREIGN KEY (ManufacturerID) REFERENCES Manufacturer(ManufacturerID)
+);
+
+CREATE TABLE Warehouse (
+    WarehouseID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE Inventory (
+    InventoryID INT AUTO_INCREMENT PRIMARY KEY,
+    ItemID INT,
+    WarehouseID INT,
+    Quantity INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
+    FOREIGN KEY (WarehouseID) REFERENCES Warehouse(WarehouseID)
+);
+
+SHOW TABLES;
+
+INSERT INTO Manufacturer (Name, AbbreviatedName) VALUES
+('Acme Corp', 'ACME'),
+('Globex Industries', 'GLOBEX');
+
+INSERT INTO Warehouse (Name) VALUES
+('North Warehouse'),
+('South Warehouse');
+
+INSERT INTO Item (Name, UnitsAvailable, ManufacturerID) VALUES
+('Widget A', 100, 1),
+('Widget B', 50, 2);
+
+INSERT INTO Inventory (ItemID, WarehouseID, Quantity) VALUES
+(1, 1, 60),  -- 60 units of Widget A in North Warehouse
+(1, 2, 40),  -- 40 units of Widget A in South Warehouse
+(2, 1, 50);  -- 50 units of Widget B in North Warehouse
+
+SELECT * FROM Manufacturer;
+SELECT * FROM Warehouse;
+SELECT * FROM Item;
+SELECT * FROM Inventory;
+
+ALTER TABLE Item 
+ADD COLUMN SalesPrice DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+ADD COLUMN UnitCost DECIMAL(10,2) NOT NULL DEFAULT 0.00;
+
+
+SELECT * FROM Item;
