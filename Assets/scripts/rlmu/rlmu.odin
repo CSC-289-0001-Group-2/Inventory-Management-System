@@ -1,5 +1,4 @@
 // paste me into your raylib project!
-
 package rlmu
 
 import "core:fmt"
