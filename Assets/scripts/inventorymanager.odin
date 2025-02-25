@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:sort"
+// import "item.odin"
 
 // Create a dynamic array of type "Item"
 item_inventory: [dynamic]Item
