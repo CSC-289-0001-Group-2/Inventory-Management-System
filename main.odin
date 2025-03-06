@@ -28,3 +28,4 @@ main :: proc() {
             mu.label(ctx, "Hello, world")
         }
     } 
+}
