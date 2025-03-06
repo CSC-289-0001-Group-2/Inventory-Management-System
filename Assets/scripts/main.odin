@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:encoding/json"
+import "core:sort"
 
 // Define a structure to represent an inventory item.
 InventoryItem :: struct {
@@ -26,6 +27,28 @@ main :: proc() {
     if marshal_err != nil {
         fmt.println("JSON marshal error:", marshal_err)
         return
+    }
+
+    // Add item to array
+    AddItem :: proc (item: InventoryItem){
+        InventoryItem.append(item)
+    }
+
+    // Remove an item from the array
+    RemoveItem :: proc (itemName: string) {
+        ordered_remove(InventoryItem, itemName)
+    }
+
+    // Update the amount of an item in the array
+    UpdateAmount :: proc(itemName: string, newAmount: int) {
+        InventoryItem[itemName].amount = newAmount
+    }
+
+    // Add up the total value of the inventory
+    GetTotalValue :: proc() -> float {
+        total: float
+        for i := 0; i < item_inventory.len; i+= 1 {
+            total += item_inventory[i].price
     }
 
     // Open (or create) the inventory file with read-write permissions.
@@ -82,4 +105,5 @@ main :: proc() {
 
     // Print the current inventory to the console.
     fmt.println("Current inventory:", items2)
+}
 }
