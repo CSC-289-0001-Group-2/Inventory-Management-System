@@ -52,18 +52,18 @@ write_inventory_item :: proc(file: os.File, item: InventoryItem) -> bool {
 // Read one inventory item from the file. Returns (success, item).
 read_inventory_item :: proc(file: os.File) -> (bool, InventoryItem) {
     var item: InventoryItem
-    var bytes_read: int = 0
+    var bytes_read: int = 0 // Tracks the number of bytes read from the file
 
     // Read the fixed-size fields
     bytes_read = read_val(file, &item.id)
     if bytes_read != size_of(item.id) {
-        fmt.println("Error: Failed to read item ID.")
+        fmt.println("Error: Failed to read item ID. Bytes read:", bytes_read)
         return false, item
     }
 
     bytes_read = read_val(file, &item.quantity)
     if bytes_read != size_of(item.quantity) {
-        fmt.println("Error: Failed to read item quantity.")
+        fmt.println("Error: Failed to read item quantity. Bytes read:", bytes_read)
         return false, item
     }
 
