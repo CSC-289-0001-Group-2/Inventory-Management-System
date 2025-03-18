@@ -19,7 +19,6 @@ main :: proc() {
     items := []InventoryItem{
         InventoryItem{ id = 1, name = "Apples", quantity = 50, price = 0.99, manufacturer = "FarmFresh", is_deleted = false },
         InventoryItem{ id = 2, name = "Swords", quantity = 5, price = 299.99, manufacturer = "Camelot", is_deleted = false },
-        InventoryItem{ id = 3, name = "Metallica T-Shirts", quantity = 30, price = 20.00, manufacturer = "Metallica", is_deleted = false },
     }
 
     // Marshal (serialize) the items slice into JSON format.
