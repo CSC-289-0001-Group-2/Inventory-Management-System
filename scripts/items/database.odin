@@ -102,7 +102,7 @@ read_inventory_item :: proc(file: os.File) -> (bool, InventoryItem) {
 }
 
 // Read all inventory items.
-read_inventory_items :: proc(file: os.File) -> []InventoryItem {
+read_full_inventory :: proc(file: os.File) -> []InventoryItem {
     os.seek(file, 0, os.SEEK_SET)
     items: []InventoryItem = nil
     for {
