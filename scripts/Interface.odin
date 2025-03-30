@@ -2,6 +2,8 @@ package Interface
 
 // port of micro ui c demo to odin, using rlmu as renderer
 
+import "items"
+
 import "rlmu"
 import "core:fmt"
 import "core:strings"
