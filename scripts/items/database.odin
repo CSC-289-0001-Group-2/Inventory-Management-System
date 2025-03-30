@@ -1,6 +1,6 @@
 // Binary file format for inventory items.
 
-package main
+package items
 
 import "core:fmt"
 import "core:os"
