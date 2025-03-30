@@ -1,4 +1,4 @@
-package main
+package demo
 
 // port of micro ui c demo to odin, using rlmu as renderer
 
@@ -8,17 +8,21 @@ import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
 
+
 log_sb := strings.builder_make()
 log_updated := false
 
 log_input_text := make_slice([]u8, 128)
 log_input_text_len : int
 
+screen_width : i32= 800
+screen_height : i32= 800
+
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
     rl.SetWindowState({ .WINDOW_RESIZABLE })
-    rl.InitWindow(720, 600, "Odin/Raylib/Inventory Managment UI")
+    rl.InitWindow(screen_width, screen_height, "Odin/Raylib/Inventory Managment UI")
     defer rl.CloseWindow()
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
@@ -65,8 +69,8 @@ style_window :: proc(ctx : ^mu.Context) {
         defer mu.end_window(ctx)
 
         slider_width := i32(f32(mu.get_current_container(ctx).body.w) * 0.14)
-        mu.layout_row(ctx, { 80, slider_width, slider_width, slider_width, slider_width, -1 }, 0)
-        for i in 0..<len(colors) {
+        mu.layout_row(ctx, { 80 /* label width */, slider_width /* each width represents a single slider*/, slider_width, slider_width, slider_width, -1 /* not sure what this does*/}, 0)
+        for i in 0..<len(colors) /* this loop creates the sliders*/{
             color_type := colors[i].type
             color := &ctx.style.colors[color_type]
 
