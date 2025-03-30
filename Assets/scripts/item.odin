@@ -1,4 +1,4 @@
-#ITEM CLASS
+// ITEM CLASS
 
 package main
 
@@ -6,10 +6,10 @@ import "core:fmt"
 
 //Item STRUCT
 Item :: struct {
-    name        string
-    price       f32
-    amount      int
-    manufacturer string
+    name         : string,
+    price        : f32,
+    amount       : int,
+    manufacturer : string
 }
 
 //Constructor for Item
