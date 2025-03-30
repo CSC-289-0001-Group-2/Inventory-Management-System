@@ -1,3 +1,5 @@
+// Binary file format for inventory items.
+
 package main
 
 import "core:fmt"
