@@ -102,7 +102,7 @@ read_inventory_item :: proc(file: os.File) -> (bool, InventoryItem) {
 }
 
 // Read all inventory items.
-read_inventory_items :: proc(file: os.File) -> []InventoryItem {
+read_full_inventory :: proc(file: os.File) -> []InventoryItem {
     os.seek(file, 0, os.SEEK_SET)
     items: []InventoryItem = nil
     for {
@@ -113,6 +113,7 @@ read_inventory_items :: proc(file: os.File) -> []InventoryItem {
     return items
 }
 
+// Change this to find item by name.
 // Find an inventory item by id.
 find_inventory_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
     os.seek(file, 0, os.SEEK_SET)
@@ -165,6 +166,12 @@ update_inventory_price :: proc(file: os.File, search_id: i32, new_price: i32) ->
     }
     return false
 }
+
+// remove_item :: 
+
+// full_inventory_value ::
+
+// all_items_by_manufacturer ::
 
 test_database :: proc(file: os.File) {
     name1 := "Apples".to_bytes()
@@ -241,6 +248,8 @@ test_write_and_read_item :: proc() {
     assert(read_item.id == item.id, "Item ID mismatch")
     assert(read_item.name.count == item.name.count, "Name count mismatch")
 }
+
+// Test the read_full_inventory function.
 
 main :: proc() {
     file, err := os.open("inventory.dat", os.O_RDWR | os.O_CREATE, 0666)
