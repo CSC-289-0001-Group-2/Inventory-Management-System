@@ -1,6 +1,6 @@
 //ITEM CLASS
 
-package Item
+package items
 
 import "core:fmt"
 

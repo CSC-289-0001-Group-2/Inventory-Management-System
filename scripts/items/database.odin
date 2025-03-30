@@ -1,6 +1,6 @@
 // Binary file format for inventory items.
 
-package main
+package items
 
 import "core:fmt"
 import "core:os"
@@ -53,8 +53,8 @@ write_inventory_item :: proc(file: os.File, item: InventoryItem) -> bool {
 
 // Read one inventory item from the file. Returns (success, item).
 read_inventory_item :: proc(file: os.File) -> (bool, InventoryItem) {
-    var item: InventoryItem
-    var bytes_read: int = 0 // Tracks the number of bytes read from the file
+    item: InventoryItem
+    bytes_read: int = 0 // Tracks the number of bytes read from the file
 
     // Read the fixed-size fields
     bytes_read = read_val(file, &item.id)
