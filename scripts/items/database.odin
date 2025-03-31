@@ -67,8 +67,13 @@ write_inventory_item :: proc(handle: os.Handle, item: InventoryItem) -> bool {
     // Check for errors
     if writer.err != io.Error.None {
         fmt.println("Buffered write error:", writer.err)
+        // Destroy the writer before returning
+        bufio.writer_destroy(&writer)
         return false
     }
+    
+    // Destroy the writer to release resources
+    bufio.writer_destroy(&writer)
     return true
 }
 
@@ -95,24 +100,28 @@ read_inventory_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
     bytes_read = read_val(i32, reader.rd, &item.id)
     if bytes_read != size_of(item.id) {
         fmt.println("Error: Failed to read item ID. Bytes read:", bytes_read)
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
     bytes_read = read_val(i32, reader.rd, &item.quantity)
     if bytes_read != size_of(item.quantity) {
         fmt.println("Error: Failed to read item quantity. Bytes read:", bytes_read)
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
     bytes_read = read_val(i32, reader.rd, &item.price)
     if bytes_read != size_of(item.price) {
         fmt.println("Error: Failed to read item price.")
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
     // Read the name count.
     bytes_read = read_val(int, reader.rd, &item.name.count)
     if bytes_read != size_of(item.name.count) {
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
@@ -121,12 +130,15 @@ read_inventory_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
     bytes_read = os.read(reader.rd, mem.slice_from_ptr(item.name.data, item.name.count))
     if bytes_read != item.name.count {
         mem.free(item.name.data)
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
     // Read the manufacturer count.
     bytes_read = read_val(int, reader.rd, &item.manufacturer.count)
     if bytes_read != size_of(item.manufacturer.count) {
+        mem.free(item.name.data)
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
@@ -136,11 +148,14 @@ read_inventory_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
     if bytes_read != item.manufacturer.count {
         mem.free(item.name.data)
         mem.free(item.manufacturer.data)
+        bufio.reader_destroy(&reader)
         return false, item
     }
 
+    bufio.reader_destroy(&reader)
     return true, item
 }
+
 
 // Read all inventory items from the stream.
 read_full_inventory :: proc(handle: os.Handle) -> []InventoryItem {
