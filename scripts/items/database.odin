@@ -8,7 +8,8 @@ import "core:mem"
 import "core:io"
 import "core:bufio"
 
-// global_arena: mem.ArenaAllocator; // Declare a global arena allocator.
+// not currently making use - need to implement
+global_arena: mem.ArenaAllocator; // Declare a global arena allocator.
 
 // Generic helper to write a value's bytes to a file.
 write_val :: proc(T: type, file: io.Stream, ptr: ^T) -> int {
@@ -40,6 +41,7 @@ BUFFER_SIZE :: 1024
 log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
+
 
 // Write an inventory item to a binary file using buffered I/O.
 write_inventory_item :: proc(handle: os.Handle, item: InventoryItem) -> bool {
