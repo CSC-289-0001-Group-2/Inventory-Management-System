@@ -1,3 +1,5 @@
+package items
+
 // Method to remove an item from the array
 RemoveItem :: proc (itemName: string) {
     ordered_remove(item_inventory, itemName) // not declared anywhere
