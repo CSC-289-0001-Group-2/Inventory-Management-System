@@ -168,7 +168,19 @@ update_inventory_price :: proc(file: os.File, search_id: i32, new_price: i32) ->
 }
 
 // remove_item :: 
-
+// Removes an item from the database
+remove_item :: proc(file: os.File, search_id: i32) -> bool{
+    os.seek(file, 0, os.SEEK_SET)
+    for {
+        success := read_inventory_item(file)
+        if !success { break }
+        if item.id == search_id {
+            pop(InventoryItem[file])
+            return true
+        }
+    }
+    return false
+}
 // full_inventory_value ::
 
 // all_items_by_manufacturer ::
