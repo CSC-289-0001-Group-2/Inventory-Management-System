@@ -5,6 +5,8 @@ package items
 import "core:fmt"
 import "core:os"
 import "core:mem"
+import "core:io"
+import "core:bufio"
 
 global_arena: mem.ArenaAllocator; // Declare a global arena allocator.
 
