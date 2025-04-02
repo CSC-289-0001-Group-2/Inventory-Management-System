@@ -365,7 +365,7 @@ main :: proc() {
 
     fmt.println("File contents:\n", string(contents))
 
-    os.close(filename)
+    defer os.close(filename)
 
     // Call test_database for testing purposes.
     test_database(handle)
