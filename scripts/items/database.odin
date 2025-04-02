@@ -1,4 +1,5 @@
 // Binary file format for inventory items.
+// Item, in our use, means something that a store would sell. Example: 'Apple' item. 'Sword' item. 'Skateboard' item.
 
 package items
 
@@ -40,7 +41,7 @@ log_operation :: proc(operation: string, item: InventoryItem) {
 }
 
 // Serialization
-serialize_inventory_item :: proc(item: InventoryItem, allocator: memory.Allocator) -> []u8 {
+serialize_item :: proc(item: InventoryItem, allocator: memory.Allocator) -> []u8 {
     // Calculate total size needed: 
     // - 2 * i32 (id + quantity) → 8 bytes
     // - 1 * f32 (price) → 4 bytes
@@ -76,11 +77,11 @@ serialize_inventory_item :: proc(item: InventoryItem, allocator: memory.Allocato
 
 
 // Write an inventory item to a binary file
-write_inventory_item :: proc(file_name: string, item: InventoryItem) -> bool {
+write_item :: proc(file_name: string, item: InventoryItem) -> bool {
     log_operation("Adding item", item)
 
     // Serialize InventoryItem into a byte slice
-    serialized_data := serialize_inventory_item(item)
+    serialized_data := serialize_item(item)
     
     // Write the data to a binary file
     success := os.write_entire_file(file_name, serialized_data, true)
@@ -95,7 +96,7 @@ write_inventory_item :: proc(file_name: string, item: InventoryItem) -> bool {
 
 
 // Read one inventory item from the stream. Returns (success, item).
-read_inventory_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
+read_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
     item: InventoryItem
     bytes_read: int = 0 // Tracks the number of bytes read
 
@@ -180,7 +181,7 @@ read_full_inventory :: proc(handle: os.Handle) -> []InventoryItem {
     os.seek(handle, 0, os.SEEK_SET)
     items: []InventoryItem = nil
     for {
-        success, item := read_inventory_item(handle)
+        success, item := read_item(handle)
         if !success { break }
         items = append(items, item)
     }
@@ -189,10 +190,10 @@ read_full_inventory :: proc(handle: os.Handle) -> []InventoryItem {
 
 // Change this to find item by name.
 // Find an inventory item by id.
-find_inventory_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
+find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
     os.seek(file, 0, os.SEEK_SET)
     for {
-        success, item := read_inventory_item(file)
+        success, item := read_item(file)
         if !success { break }
         if item.id == search_id {
             return true, item
@@ -207,7 +208,7 @@ update_inventory_quantity :: proc(handle: os.Handle, search_id: i32, sold_quanti
     os.seek(handle, 0, os.SEEK_SET)
     for {
         start_pos := os.tell(handle)
-        success, item := read_inventory_item(handle)
+        success, item := read_item(handle)
         if !success { break }
         if item.id == search_id {
             item.quantity -= sold_quantity
@@ -227,11 +228,11 @@ update_inventory_price :: proc(handle: os.Handle, search_id: i32, new_price: f32
     os.seek(handle, 0, os.SEEK_SET)
     for {
         start_pos := os.tell(handle)
-        success, item := read_inventory_item(handle)
+        success, item := read_item(handle)
         if !success { break }
         if item.id == search_id {
             item.price = new_price
-            serialized_item := serialize_inventory_item(item) // Serialize the entire struct
+            serialized_item := serialize_item(item) // Serialize the entire struct
             os.seek(handle, start_pos, os.SEEK_SET)  // Seek back to item's position
             os.write(handle, serialized_item)  // Overwrite full item
             return true
@@ -265,14 +266,14 @@ test_database :: proc(handle: os.Handle) {
         },
     }
 
-    success := write_inventory_item(file, new_item1)
+    success := write_item(file, new_item1)
     if success {
         fmt.println("First item added to inventory.")
     } else {
         fmt.println("Failed to add first item.")
     }
 
-    name2 := "Swords".to_bytes()
+    name2 := "Sword".to_bytes()
     manufacturer2 := "Camelot".to_bytes()
 
     new_item2: InventoryItem = InventoryItem{
@@ -289,11 +290,35 @@ test_database :: proc(handle: os.Handle) {
         },
     }
 
-    success = write_inventory_item(handle, new_item2)
+    success = write_item(handle, new_item2)
     if success {
         fmt.println("Second item added to inventory.")
     } else {
         fmt.println("Failed to add second item.")
+    }
+
+    name3 := "Skateboard".to_bytes()
+    manufacturer3 := "Birdhouse".to_bytes()
+
+    new_item3: InventoryItem = InventoryItem{
+        id = 3,
+        quantity = 50,
+        price = 60, // $60 - should still have price at f32 even though it looks like i32
+        name = StringData{
+            count = len(name3),
+            data = &name3[0],
+        },
+        manufacturer = StringData{
+            count = len(manufacturer3),
+            data = &manufacturer3[0],
+        },
+    }
+
+    success = write_item(handle, new_item2)
+    if success {
+        fmt.println("Third item added to inventory.")
+    } else {
+        fmt.println("Failed to add third item.")
     }
 }
 
@@ -313,11 +338,11 @@ test_write_and_read_item :: proc() {
         manufacturer = StringData{count = 7, data = "FarmInc".to_bytes()},
     }
 
-    success := write_inventory_item(handle, item)
+    success := write_item(handle, item)
     assert(success, "Failed to write item")
 
     os.seek(handle, 0, os.SEEK_SET)
-    success, read_item := read_inventory_item(handle)
+    success, read_item := read_item(handle)
     assert(success, "Failed to read item")
     assert(read_item.id == item.id, "Item ID mismatch")
     assert(read_item.name.count == item.name.count, "Name count mismatch")
