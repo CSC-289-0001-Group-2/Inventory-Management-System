@@ -7,9 +7,10 @@ import "core:os"
 import "core:mem"
 import "core:io"
 import "core:bufio"
+import vmem "core:mem/virtual"
 
-// not currently making use - need to implement
-global_arena: mem.ArenaAllocator; // Declare a global arena allocator.
+arena := vmem.Arena
+
 
 // Generic helper to write a value's bytes to a file.
 write_val :: proc(T: type, file: io.Stream, ptr: ^T) -> int {
@@ -127,7 +128,7 @@ read_inventory_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
 
     // Allocate memory for the name and read the data.
     item.name.data = mem.alloc(item.name.count)
-    bytes_read = os.read(reader.rd, mem.slice_from_ptr(item.name.data, item.name.count))
+    bytes_read = os.read(reader.rd, mem.slice_ptr(item.name.data, item.name.count))
     if bytes_read != item.name.count {
         mem.free(item.name.data)
         bufio.reader_destroy(&reader)
@@ -144,7 +145,7 @@ read_inventory_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
 
     // Allocate memory for the manufacturer and read the data.
     item.manufacturer.data = mem.alloc(item.manufacturer.count)
-    bytes_read = os.read(reader.rd, mem.slice_from_ptr(item.manufacturer.data, item.manufacturer.count))
+    bytes_read = os.read(reader.rd, mem.slice_ptr(item.manufacturer.data, item.manufacturer.count))
     if bytes_read != item.manufacturer.count {
         mem.free(item.name.data)
         mem.free(item.manufacturer.data)
