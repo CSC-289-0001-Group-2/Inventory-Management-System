@@ -350,6 +350,7 @@ test_write_and_read_item :: proc() {
 
 // Write a test for the read_full_inventory function.
 
+// Write a test to print all inventory items
 
 main :: proc() {
     filename := "inventory.dat"
