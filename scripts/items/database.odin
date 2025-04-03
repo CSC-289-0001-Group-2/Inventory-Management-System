@@ -1,280 +1,78 @@
-// Binary file format for inventory items.
-// Item, in our use, means something that a store would sell. Example: 'Apple' item. 'Sword' item. 'Skateboard' item.
-
 package items
 
 import "core:fmt"
 import "core:os"
-import "core:mem"
 import "core:bytes"
-import vmem "core:mem/virtual"
-
-
 
 StringData :: struct {
-    count: int,            // Number of bytes in the string
-    data: ^u8,             // Pointer to the string data
+    count: int,
+    data: ^u8,
 }
 
 InventoryItem :: struct {
-    id: i32,               // Item ID
-    quantity: i32,         // Quantity of the item
-    price: f32,            // Price as float (e.g., $5.99)
-    name: StringData,      // Name of the item
-    manufacturer: StringData, // Manufacturer of the item
+    id: i32,
+    quantity: i32,
+    price: f32,
+    name: StringData,
+    manufacturer: StringData,
 }
 
 BUFFER_SIZE :: 1024
 
-// Log inventory operations
 log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
-// Holds inventory items in memory before writing to file
 InventoryDatabase :: struct {
-    items: []InventoryItem, // Dynamic array of items
+    items: []InventoryItem,
 }
 
-// Adds an item to the inventory array
 add_item :: proc(db: ^InventoryDatabase, item: InventoryItem) {
     db.items = append(db.items, item)
 }
 
-
 serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
-    buffer: bytes.Buffer
-    count := len(database.items)
-
-    // Write the total number of items first
-    buffer.write(transmute([4]u8) count)
-
-    // Serialize each item and append it to the buffer
+    buffer := bytes.Buffer{}
+    
+    item_count := len(database.items)
+    buffer.write_bytes(item_count)
+    
     for item in database.items {
-        buffer.write(transmute([4]u8) item.id)
-        buffer.write(transmute([4]u8) item.quantity)
-        buffer.write(transmute([4]u8) item.price)
-        buffer.write(transmute([4]u8) item.name.count)
-        buffer.write(transmute([4]u8) item.manufacturer.count)
-
-        // Copy string data into the buffer
-        buffer.write(mem.slice(item.name.data, item.name.count))
-        buffer.write(mem.slice(item.manufacturer.data, item.manufacturer.count))
+        buffer.write_bytes(item.id),
+        buffer.write_bytes(item.quantity),
+        buffer.write_bytes(item.price),
+        
+        buffer.write_bytes(item.name.count),
+        buffer.write(item.name.data[:item.name.count]),
+        
+        buffer.write_bytes(item.manufacturer.count),
+        buffer.write(item.manufacturer.data[:item.manufacturer.count]),
     }
-
+    
     return buffer
 }
 
-
-// Write an inventory item to a binary file
 write_item :: proc(file_name: string, item: InventoryItem) -> bool {
     log_operation("Adding item", item)
-
-    // Serialize InventoryItem into a byte slice
-    serialized_data := serialize_item(item)
     
-    // Write the data to a binary file
-    success := os.write_entire_file(file_name, serialized_data, true)
+    temp_db: InventoryDatabase
+    temp_db.items = append(temp_db.items, item)
     
+    buffer := serialize_inventory(temp_db)
+    success := os.write_entire_file(file_name, buffer.data, true)
     if !success {
         fmt.println("Error writing to file:", file_name)
         return false
     }
-
     return true
 }
 
-
-// Save the inventory file.
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
     buffer := serialize_inventory(database)
-
     success := os.write_entire_file(file_name, buffer.data, true)
     if !success {
         fmt.println("Error writing inventory to file:", file_name)
         return false
     }
-
     return true
-}
-
-
-
-// Update an inventory item's quantity.
-// Reads the item, updates the quantity, then seeks back to the quantity field.
-update_inventory_quantity :: proc(handle: os.Handle, search_id: i32, sold_quantity: i32) -> bool {
-    os.seek(handle, 0, os.SEEK_SET)
-    for {
-        start_pos := os.tell(handle)
-        success, item := read_item(handle)
-        if !success { break }
-        if item.id == search_id {
-            item.quantity -= sold_quantity
-            // Calculate offset: assume quantity immediately follows id.
-            offset := size_of(item.id)
-            // Seek to the quantity field.
-            os.seek(handle, start_pos + offset, os.SEEK_SET)
-            data: []u8 = mem.as_bytes(&item.quantity)[0:size_of(item.quantity)]
-            os.write(handle, data)
-            return true
-        }
-    }
-    return false
-}
-
-update_inventory_price :: proc(handle: os.Handle, search_id: i32, new_price: f32) -> bool {
-    os.seek(handle, 0, os.SEEK_SET)
-    for {
-        start_pos := os.tell(handle)
-        success, item := read_item(handle)
-        if !success { break }
-        if item.id == search_id {
-            item.price = new_price
-            serialized_item := serialize_item(item) // Serialize the entire struct
-            os.seek(handle, start_pos, os.SEEK_SET)  // Seek back to item's position
-            os.write(handle, serialized_item)  // Overwrite full item
-            return true
-        }
-    }
-    return false
-}
-
-
-// Test functions for the inventory system.
-test_database :: proc(handle: os.Handle) {
-    name1 := "Apples".to_bytes()
-    manufacturer1 := "FarmFresh".to_bytes()
-
-    new_item1: InventoryItem = InventoryItem{
-        id = 1,
-        quantity = 50,
-        price = 0.99, // $0.99
-        name = StringData{
-            count = len(name1),
-            data = &name1[0],
-        },
-        manufacturer = StringData{
-            count = len(manufacturer1),
-            data = &manufacturer1[0],
-        },
-    }
-
-    success := write_item(file, new_item1)
-    if success {
-        fmt.println("First item added to inventory.")
-    } else {
-        fmt.println("Failed to add first item.")
-    }
-
-    name2 := "Sword".to_bytes()
-    manufacturer2 := "Camelot".to_bytes()
-
-    new_item2: InventoryItem = InventoryItem{
-        id = 2,
-        quantity = 5,
-        price = 299.99, // $299.99
-        name = StringData{
-            count = len(name2),
-            data = &name2[0],
-        },
-        manufacturer = StringData{
-            count = len(manufacturer2),
-            data = &manufacturer2[0],
-        },
-    }
-
-    success = write_item(handle, new_item2)
-    if success {
-        fmt.println("Second item added to inventory.")
-    } else {
-        fmt.println("Failed to add second item.")
-    }
-
-    name3 := "Skateboard".to_bytes()
-    manufacturer3 := "Birdhouse".to_bytes()
-
-    new_item3: InventoryItem = InventoryItem{
-        id = 3,
-        quantity = 50,
-        price = 60, // $60 - should still have price at f32 even though it looks like i32
-        name = StringData{
-            count = len(name3),
-            data = &name3[0],
-        },
-        manufacturer = StringData{
-            count = len(manufacturer3),
-            data = &manufacturer3[0],
-        },
-    }
-
-    success = write_item(handle, new_item2)
-    if success {
-        fmt.println("Third item added to inventory.")
-    } else {
-        fmt.println("Failed to add third item.")
-    }
-}
-
-test_write_and_read_item :: proc() {
-    handle, err := os.open("test_inventory.dat", os.O_RDWR | os.O_CREATE, 0666)
-    if err != nil {
-        fmt.println("Failed to open test file.")
-        return
-    }
-    defer os.close(handle)
-
-    item := InventoryItem{
-        id = 1,
-        quantity = 10,
-        price = 1.00,
-        name = StringData{count = 5, data = "Apple".to_bytes()},
-        manufacturer = StringData{count = 7, data = "FarmInc".to_bytes()},
-    }
-
-    success := write_item(handle, item)
-    assert(success, "Failed to write item")
-
-    os.seek(handle, 0, os.SEEK_SET)
-    success, read_item := read_item(handle)
-    assert(success, "Failed to read item")
-    assert(read_item.id == item.id, "Item ID mismatch")
-    assert(read_item.name.count == item.name.count, "Name count mismatch")
-}
-
-// Write a test for the read_full_inventory function.
-
-
-main :: proc() {
-    filename := "inventory.dat"
-
-    // Read the file into a buffer
-    buffer := bytes.Buffer{}
-    contents, err := os.read_entire_file(mem.alloc, filename)
-    if err != nil {
-        fmt.println("Failed to open file:", err)
-        return
-    }
-    
-    defer mem.free(contents) // Free allocated memory after use
-
-    // Write contents to buffer
-    buffer.write(contents)
-
-    fmt.println("File contents:\n", string(buffer.data))
-
-    // Perform modifications if needed
-    // Example: Adding text (modify as needed)
-    buffer.write_string("\nNew entry added!")
-
-    // Save the updated contents back to the file
-    err = os.write_entire_file(filename, buffer.data)
-    if err != nil {
-        fmt.println("Failed to write to file:", err)
-        return
-    }
-
-    fmt.println("File successfully updated.")
-
-    // Call test_database for testing purposes.
-    test_database()
 }
