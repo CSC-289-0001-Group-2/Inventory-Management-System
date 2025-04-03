@@ -383,6 +383,7 @@ test_write_and_read_item :: proc() {
     assert(read_item.name == item.name, "Name mismatch")
 }
 
+// Write a test to print all inventory items
 
 main :: proc() {
     filename := "inventory.dat"
