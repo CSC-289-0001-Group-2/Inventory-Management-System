@@ -82,7 +82,7 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
         
         manufacturer_data := item.manufacturer.to_bytes()
         buffer.write_u32(len(manufacturer_data))
-        buffer.write_manufacturer_data)
+        buffer.write(manufacturer_data)
     }
         
     return buffer
@@ -383,6 +383,7 @@ test_write_and_read_item :: proc() {
     assert(read_item.name == item.name, "Name mismatch")
 }
 
+// Write a test to print all inventory items
 
 main :: proc() {
     filename := "inventory.dat"
