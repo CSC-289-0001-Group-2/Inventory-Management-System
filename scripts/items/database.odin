@@ -364,14 +364,6 @@ main :: proc() {
     
     defer mem.free(contents) // Free allocated memory after use
 
-    // Write contents to buffer
-    buffer.write(contents)
-
-    fmt.println("File contents:\n", string(buffer.data))
-
-    // Perform modifications if needed
-    // Example: Adding text (modify as needed)
-    buffer.write_string("\nNew entry added!")
 
     // Save the updated contents back to the file
     err = os.write_entire_file(filename, buffer.data)
