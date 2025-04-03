@@ -14,12 +14,13 @@ import vmem "core:mem/virtual"
 arena := vmem.Arena
 */
 
-
+/*
 // Generic helper to read bytes from a file into a value.
 read_val :: proc(T: type, file: io.Stream, ptr: ^T) -> int {
     data: []u8 = mem.as_bytes(ptr)[0:min(size_of(T), len(mem.as_bytes(ptr)))]
     return os.read(stream, data)
 }
+*/
 
 StringData :: struct {
     count: int,            // Number of bytes in the string
@@ -36,41 +37,41 @@ InventoryItem :: struct {
 
 BUFFER_SIZE :: 1024
 
+// Log inventory operations
 log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
-// Serialization
-serialize_item :: proc(item: InventoryItem, allocator: memory.Allocator) -> []u8 {
-    // Calculate total size needed: 
-    // - 2 * i32 (id + quantity) → 8 bytes
-    // - 1 * f32 (price) → 4 bytes
-    // - 2 * int (string lengths) → depends on architecture (typically 8-16 bytes)
-    // - Actual string bytes (name and manufacturer)
-    total_size := 8 + 4 + 8 + item.name.count + item.manufacturer.count
+// Holds inventory items in memory before writing to file
+InventoryDatabase :: struct {
+    items: []InventoryItem, // Dynamic array of items
+}
 
-    buffer := mem.alloc(allocator, total_size) // Allocate buffer for all data
-    offset := 0 // Initialize the offset
+// Adds an item to the inventory array
+add_item :: proc(db: ^InventoryDatabase, item: InventoryItem) {
+    db.items = append(db.items, item)
+}
 
-    // Convert values to byte representation - offset works similar to specifying an index in Python
-    // Offset += 4 is telling the script to look 4 bytes past the last 'object' copied, aka one index away
-    mem.copy(buffer[offset: offset+4], transmute([4]u8)item.id)
-    offset += 4
-    mem.copy(buffer[offset: offset+4], transmute([4]u8)item.quantity)
-    offset += 4
-    mem.copy(buffer[offset: offset+4], transmute([4]u8)item.price)
-    offset += 4
-    mem.copy(buffer[offset: offset+4], transmute([4]u8)item.name.count)
-    offset += 4
-    mem.copy(buffer[offset: offset+4], transmute([4]u8)item.manufacturer.count)
-    offset += 4
 
-    // Copy string data
-    mem.copy(buffer[offset: offset + item.name.count], item.name.data)
-    offset += item.name.count
+serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
+    buffer: bytes.Buffer
+    count := len(database.items)
 
-    mem.copy(buffer[offset: offset + item.manufacturer.count], item.manufacturer.data)
-    offset += item.manufacturer.count
+    // Write the total number of items first
+    buffer.write(transmute([4]u8) count)
+
+    // Serialize each item and append it to the buffer
+    for item in database.items {
+        buffer.write(transmute([4]u8) item.id)
+        buffer.write(transmute([4]u8) item.quantity)
+        buffer.write(transmute([4]u8) item.price)
+        buffer.write(transmute([4]u8) item.name.count)
+        buffer.write(transmute([4]u8) item.manufacturer.count)
+
+        // Copy string data into the buffer
+        buffer.write(mem.slice(item.name.data, item.name.count))
+        buffer.write(mem.slice(item.manufacturer.data, item.manufacturer.count))
+    }
 
     return buffer
 }
@@ -94,7 +95,7 @@ write_item :: proc(file_name: string, item: InventoryItem) -> bool {
     return true
 }
 
-
+/*
 // Read one inventory item from the stream. Returns (success, item).
 read_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
     item: InventoryItem
@@ -188,6 +189,22 @@ read_full_inventory :: proc(handle: os.Handle) -> []InventoryItem {
     return items
 }
 
+*/
+
+// Save the inventory file.
+save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
+    buffer := serialize_inventory(database)
+
+    success := os.write_entire_file(file_name, buffer.data, true)
+    if !success {
+        fmt.println("Error writing inventory to file:", file_name)
+        return false
+    }
+
+    return true
+}
+
+/*
 // Change this to find item by name.
 // Find an inventory item by id.
 find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
@@ -201,6 +218,7 @@ find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
     }
     return false, InventoryItem{}
 }
+    */
 
 // Update an inventory item's quantity.
 // Reads the item, updates the quantity, then seeks back to the quantity field.
@@ -354,19 +372,34 @@ test_write_and_read_item :: proc() {
 main :: proc() {
     filename := "inventory.dat"
 
-    // Read the file
-    contents, err := os.read_entire_file(mem.default_allocator, filename)
+    // Read the file into a buffer
+    buffer := bytes.Buffer{}
+    contents, err := os.read_entire_file(mem.alloc, filename)
     if err != nil {
         fmt.println("Failed to open file:", err)
         return
     }
+    
+    defer mem.free(contents) // Free allocated memory after use
 
-    defer mem.default_allocator.free(contents) // Free the allocated memory after use
+    // Write contents to buffer
+    buffer.write(contents)
 
-    fmt.println("File contents:\n", string(contents))
+    fmt.println("File contents:\n", string(buffer.data))
 
-    defer os.close(filename)
+    // Perform modifications if needed
+    // Example: Adding text (modify as needed)
+    buffer.write_string("\nNew entry added!")
+
+    // Save the updated contents back to the file
+    err = os.write_entire_file(filename, buffer.data)
+    if err != nil {
+        fmt.println("Failed to write to file:", err)
+        return
+    }
+
+    fmt.println("File successfully updated.")
 
     // Call test_database for testing purposes.
-    test_database(handle)
+    test_database()
 }
