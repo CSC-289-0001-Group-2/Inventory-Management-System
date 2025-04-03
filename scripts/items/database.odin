@@ -77,25 +77,8 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
 }
 
 
-// Write an inventory item to a binary file
-write_item :: proc(file_name: string, item: InventoryItem) -> bool {
-    log_operation("Adding item", item)
 
-    // Serialize InventoryItem into a byte slice
-    serialized_data := serialize_item(item)
-    
-    // Write the data to a binary file
-    success := os.write_entire_file(file_name, serialized_data, true)
-    
-    if !success {
-        fmt.println("Error writing to file:", file_name)
-        return false
-    }
 
-    return true
-}
-
-/*
 // Read one inventory item from the stream. Returns (success, item).
 read_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
     item: InventoryItem
@@ -189,7 +172,7 @@ read_full_inventory :: proc(handle: os.Handle) -> []InventoryItem {
     return items
 }
 
-*/
+
 
 // Save the inventory file.
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
@@ -204,7 +187,7 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
     return true
 }
 
-/*
+
 // Change this to find item by name.
 // Find an inventory item by id.
 find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
@@ -218,7 +201,6 @@ find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
     }
     return false, InventoryItem{}
 }
-    */
 
 // Update an inventory item's quantity.
 // Reads the item, updates the quantity, then seeks back to the quantity field.
