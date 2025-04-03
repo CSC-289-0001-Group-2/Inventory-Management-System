@@ -11,6 +11,7 @@ import vmem "core:mem/virtual"
 
 BUFFER_SIZE :: 1024
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 <<<<<<< Updated upstream
 
@@ -20,6 +21,9 @@ StringData :: struct {
     count: int,    // Number of bytes in the string
     data: []u8,    // String content as a byte array
 =======
+=======
+
+>>>>>>> Stashed changes
 arena: vmem.Arena // Declare the arena variable
 vmem.arena_init_growing(&arena, BUFFER_SIZE)
 // Create an allocator from the arena
@@ -28,6 +32,7 @@ allocator := vmem.arena_allocator(&arena)
 StringData :: struct {
     count:  int,            // Number of bytes in the string
     data:   ^u8,            // Pointer to the string data
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes
 }
 
@@ -66,6 +71,8 @@ allocator := vmem.arena_allocator(&arena)
 StringData :: struct {
     count:  int,            // Number of bytes in the string
     data:   ^u8,            // Pointer to the string data
+=======
+>>>>>>> Stashed changes
 }
 
 InventoryItem :: struct {
@@ -80,12 +87,16 @@ InventoryItem :: struct {
 inventory_items: []InventoryItem
 serialized_items: [][]u8
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 // Function to log operations
 log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) {
@@ -112,6 +123,8 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
     }
 }
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 // Function to serialize an InventoryItem
@@ -173,6 +186,7 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 write_item :: proc(file_name: string, item: InventoryItem) -> bool {
     log_operation("Adding item", item)
@@ -196,10 +210,18 @@ write_item :: proc(file_name: string, item: InventoryItem, allocator: mem.Alloca
     serialized_data := serialize_item(item, allocator)
     success := os.write_entire_file(file_name, serialized_data, true)
 >>>>>>> Stashed changes
+=======
+// Function to write an InventoryItem to a binary file
+write_item :: proc(file_name: string, item: InventoryItem, allocator: mem.Allocator) -> bool {
+    log_operation("Adding item", item)
+    serialized_data := serialize_item(item, allocator)
+    success := os.write_entire_file(file_name, serialized_data, true)
+>>>>>>> Stashed changes
     if !success {
         fmt.println("Error writing to file:", file_name)
         return false
     }
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
     return true
@@ -293,6 +315,82 @@ read_inventory :: proc(file_name: string) -> []InventoryItem {
 // Change this to find item by name.
 // Find an inventory item by id.
 find_item :: proc(file: os.Handle, search_id: i32) -> (bool, InventoryItem) {
+=======
+    return true
+}
+
+// Read strings - StringData stores count and the actual text
+read_string :: proc(reader: ^bytes.Reader) -> StringData {
+    // Create empty StringData struct
+    str_data: StringData
+    // Check if enough bytes to read count
+    if reader.i + size_of(int) > len(reader.s) {
+        return str_data
+    }
+    // Read count
+    mem.copy(transmute([]u8)&str_data.count, reader.s[reader.i:reader.i+size_of(int)])
+    reader.i += size_of(int)
+    // Check if there is enough space for the actual string
+    if reader.i + str_data.count > len(reader.s) {
+        return str_data
+    }
+    // Read the actual string (data)
+    str_data.data = &reader.s[reader.i]
+    reader.i += str_data.count
+    return str_data
+}
+
+
+// Function to deserialize an InventoryItem from a bytes.Reader
+deserialize_inventory_item :: proc(reader: ^bytes.Reader) -> (InventoryItem, bool) {
+    item: InventoryItem    
+    // Checks if there is enough bytes left ro read id, quantity, and price
+    if reader.i + size_of(i32) * 2 + size_of(f32) > len(reader.s) {
+        fmt.println("Not enough bytes available to read item details")
+        return item, false
+    }
+    // Read id, quantity, and price
+    mem.copy(transmute([]u8)&item.id, reader.s[reader.i:reader.i+size_of(i32)])
+    reader.i += size_of(i32)
+    mem.copy(transmute([]u8)&item.quantity, reader.s[reader.i:reader.i+size_of(i32)])
+    reader.i += size_of(i32)
+    mem.copy(transmute([]u8)&item.price, reader.s[reader.i:reader.i+size_of(f32)])
+    reader.i += size_of(f32)
+    // Read name
+    item.name = read_string(reader)
+    // Read manufacturer
+    item.manufacturer = read_string(reader)
+    return item, true
+}
+
+
+// Function to read inventory items from a file handle
+read_inventory_items :: proc(handle: os.Handle) -> ([]InventoryItem, bool) {
+    data, success := os.read_entire_file_from_handle(handle)
+    if !success {
+        fmt.println("Error reading file")
+        return nil, false
+    }
+    reader := bytes.Reader{s = data} // Initialize a reader with the data buffer
+    items: []InventoryItem
+    for reader.i < len(reader.s) { // Read until we reach the end of the buffer
+        item, ok := deserialize_inventory_item(&reader)
+        if !ok {
+            fmt.println("Error deserializing items.")
+            break
+        }
+        items = append(items, item)
+    }
+    return items, true
+}
+
+
+
+// Change this to find item by name.
+// Find an inventory item by id.
+// REMOVE reference to os.File
+/*find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
+>>>>>>> Stashed changes
 =======
     return true
 }
@@ -551,6 +649,7 @@ read_item :: proc(file: os.Handle) -> (bool, InventoryItem) {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // Write a test for the read_full_inventory function.
 
 // Write a test to print all inventory items
@@ -569,6 +668,8 @@ test_database :: proc(handle: os.Handle) {
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 // Function to test the inventory database
 test_database :: proc(handle: os.Handle, allocator: mem.Allocator) {
     items := []InventoryItem{
@@ -578,6 +679,7 @@ test_database :: proc(handle: os.Handle, allocator: mem.Allocator) {
     }
     for item in items {
         append(&inventory_items, item)
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 >>>>>>> Stashed changes
     }
@@ -632,6 +734,12 @@ test_database :: proc(handle: os.Handle, allocator: mem.Allocator) {
     if success {
         fmt.println("All three items have been added to inventory.")
 >>>>>>> Stashed changes
+=======
+    }
+    success := write_item(file, new_item1)
+    if success {
+        fmt.println("All three items have been added to inventory.")
+>>>>>>> Stashed changes
     }
 }
 
@@ -646,12 +754,15 @@ test_write_and_read_item :: proc() {
     item := InventoryItem{
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         id = 1,
         quantity = 10,
         price = 1.00,
         name = "Apple",
         manufacturer = "FarmInc",
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
         id =        1,
@@ -670,8 +781,13 @@ test_write_and_read_item :: proc() {
     assert(success, "Failed to read item")
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     assert(read_item.id == item.id, "Item ID mismatch")
     assert(read_item.name == item.name, "Name mismatch")
+=======
+    assert(read_inventory_items.id == item.id, "Item ID mismatch")
+    assert(read_inventory_items.name.count == item.name.count, "Name count mismatch")
+>>>>>>> Stashed changes
 =======
     assert(read_inventory_items.id == item.id, "Item ID mismatch")
     assert(read_inventory_items.name.count == item.name.count, "Name count mismatch")
