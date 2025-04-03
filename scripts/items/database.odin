@@ -82,7 +82,7 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
         
         manufacturer_data := item.manufacturer.to_bytes()
         buffer.write_u32(len(manufacturer_data))
-        buffer.write_manufacturer_data)
+        buffer.write(manufacturer_data)
     }
         
     return buffer
