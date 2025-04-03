@@ -38,17 +38,17 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
     buffer.write_bytes(item_count)
     
     for item in database.items {
-        buffer.write_bytes(item.id),
-        buffer.write_bytes(item.quantity),
-        buffer.write_bytes(item.price),
+        buffer.write_bytes(item.id)
+        buffer.write_bytes(item.quantity)
+        buffer.write_bytes(item.price)
         
-        buffer.write_bytes(item.name.count),
-        buffer.write(item.name.data[:item.name.count]),
+        buffer.write_bytes(item.name.count)
+        buffer.write(item.name.data[:item.name.count])
         
-        buffer.write_bytes(item.manufacturer.count),
-        buffer.write(item.manufacturer.data[:item.manufacturer.count]),
+        buffer.write_bytes(item.manufacturer.count)
+        buffer.write(item.manufacturer.data[:item.manufacturer.count])
     }
-    
+        
     return buffer
 }
 
