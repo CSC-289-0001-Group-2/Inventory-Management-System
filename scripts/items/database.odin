@@ -28,11 +28,32 @@ InventoryItem :: struct {
 }
 
 InventoryDatabase :: struct {
-    items: []InventoryItem, // Dynamic array of inventory items
+    items: []InventoryItem // Dynamic array of inventory items
 }
 
-INITIAL_CAPACITY :: 100 // Configurable initial capacity for dynamic arrays
-DEFAULT_ITEM_CAPACITY :: 100 // Configurable initial capacity for dynamic arrays
+// Global Variables
+inventory_items: []InventoryItem
+serialized_items: [][]u8
+
+
+arena: vmem.Arena // Declare the arena variable
+
+// Initialize the arena before using it
+init_arena :: proc() {
+    vmem.arena_init_growing(&arena, BUFFER_SIZE)
+}
+
+// Call the initialization function at the start of the program
+init_arena()
+// Create an allocator from the arena
+
+
+// Global Variables
+inventory_items: []InventoryItem
+serialized_items: [][]u8
+
+
+// Function to log operations
 log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
@@ -118,9 +139,43 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
             data = manufacturer[:],
         },
     };
+
+    // Append the new item to the database
     db.items = append(db.items, new_item); // Append the new item to the dynamic array
-    return true // Indicate successful addition of the item
+    fmt.println("Item successfully added to database:", new_item.id);
 }
+// Function to serialize an InventoryItem
+serialize_item :: proc(item: InventoryItem, allocator: mem.Allocator) -> []u8 {
+    // Calculate total size needed: 
+    // - 2 * i32 (id + quantity) → 8 bytes
+    // - 1 * f32 (price) → 4 bytes
+    // - 2 * int (string lengths) → depends on architecture (typically 8-16 bytes)
+    // - Actual string bytes (name and manufacturer)
+    total_size := 8 + 4 + 8 + item.name.count + item.manufacturer.count
+    buffer, err := mem.alloc(allocator, total_size) // Allocate buffer for all data
+    db.items = append(db.items, new_item); // Append the new item to the dynamic array
+    total_size := 8 + 4 + 8 + item.name.count + item.manufacturer.count
+    // Initialize offset to 0
+    offset := 0
+    // Offset += 4 is telling the script to look 4 bytes past the last 'object' copied, aka one index away
+    mem.copy(buffer[offset:offset+4], transmute([4]u8)&item.id)
+        return nil // Return nil or handle the error appropriately
+    mem.copy(buffer[offset:offset+4], transmute([4]u8)&item.price)
+    db.items = append(db.items, new_item); // Append the new item to the dynamic array
+    fmt.println("Item successfully added to database:", new_item.id);
+    offset += 4
+    mem.copy(buffer[offset:offset+4], transmute([4]u8)item.price)
+    offset += 4
+    mem.copy(buffer[offset:offset+4], transmute([4]u8)item.name.count)
+    offset += 4
+    mem.copy(buffer[offset:offset+4], transmute([4]u8)item.manufacturer.count)
+    offset += 4
+
+    // Copy string data
+    mem.copy(buffer[offset:offset+item.name.count], item.name.data)
+    offset += item.name.count
+    mem.copy(buffer[offset:offset+item.manufacturer.count], item.manufacturer.data)
+    offset += item.manufacturer.count
 
 serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
     estimated_size := 0
@@ -226,6 +281,7 @@ deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer, arena: ^Arena) ->
     if bytes.reader_remaining(&reader) < 4 {
     db.items = make([]InventoryItem, 0)
         return InventoryDatabase{}
+
     }
     item_count := reader.read_u32()
     if item_count < 0 || item_count > 1_000_000 { // Arbitrary upper limit for validation
@@ -341,6 +397,7 @@ update_inventory_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity
             log_operation("Updated Quantity", db.items[i])
             return true
         }
+        items = append(items, item)
     }
     fmt.println("Error: Item with ID", id, "not found.")
     return false

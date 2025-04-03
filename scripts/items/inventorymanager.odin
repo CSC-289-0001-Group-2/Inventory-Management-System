@@ -16,8 +16,8 @@ FindItem :: proc(itemName: string) {
 }
 
 // Method that adds up the total value of the inventory
-GetTotalValue :: proc() -> float {
-    total: float
+GetTotalValue :: proc() -> f32 {
+    total: f32
     for i := 0; i < item_inventory.len; i+= 1 {
       total += item_inventory[i].price
     }
