@@ -9,18 +9,7 @@ import "core:mem"
 import "core:bytes"
 import vmem "core:mem/virtual"
 
-/*
-// need to implement
-arena := vmem.Arena
-*/
 
-/*
-// Generic helper to read bytes from a file into a value.
-read_val :: proc(T: type, file: io.Stream, ptr: ^T) -> int {
-    data: []u8 = mem.as_bytes(ptr)[0:min(size_of(T), len(mem.as_bytes(ptr)))]
-    return os.read(stream, data)
-}
-*/
 
 StringData :: struct {
     count: int,            // Number of bytes in the string
@@ -95,101 +84,6 @@ write_item :: proc(file_name: string, item: InventoryItem) -> bool {
     return true
 }
 
-/*
-// Read one inventory item from the stream. Returns (success, item).
-read_item :: proc(handle: os.Handle) -> (bool, InventoryItem) {
-    item: InventoryItem
-    bytes_read: int = 0 // Tracks the number of bytes read
-
-    // Wrap the handle in a buffered reader.
-    reader_buffer := make([]u8, BUFFER_SIZE, context.allocator)
-    reader := bufio.Reader{
-        rd: handle,
-        buf: reader_buffer,
-        buf_allocator: context.allocator,
-        r: 0,
-        w: 0,
-        err: io.Error.None,
-        last_byte: -1,
-        last_rune_size: -1,
-        max_consecutive_empty_reads: 0,
-    }
-
-    // Read the fixed-size fields using read_val
-    bytes_read = read_val(i32, reader.rd, &item.id)
-    if bytes_read != size_of(item.id) {
-        fmt.println("Error: Failed to read item ID. Bytes read:", bytes_read)
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    bytes_read = read_val(i32, reader.rd, &item.quantity)
-    if bytes_read != size_of(item.quantity) {
-        fmt.println("Error: Failed to read item quantity. Bytes read:", bytes_read)
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    bytes_read = read_val(i32, reader.rd, &item.price)
-    if bytes_read != size_of(item.price) {
-        fmt.println("Error: Failed to read item price.")
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    // Read the name count.
-    bytes_read = read_val(int, reader.rd, &item.name.count)
-    if bytes_read != size_of(item.name.count) {
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    // Allocate memory for the name and read the data.
-    item.name.data = mem.alloc(item.name.count)
-    bytes_read = os.read(reader.rd, mem.slice_ptr(item.name.data, item.name.count))
-    if bytes_read != item.name.count {
-        mem.free(item.name.data)
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    // Read the manufacturer count.
-    bytes_read = read_val(int, reader.rd, &item.manufacturer.count)
-    if bytes_read != size_of(item.manufacturer.count) {
-        mem.free(item.name.data)
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    // Allocate memory for the manufacturer and read the data.
-    item.manufacturer.data = mem.alloc(item.manufacturer.count)
-    bytes_read = os.read(reader.rd, mem.slice_ptr(item.manufacturer.data, item.manufacturer.count))
-    if bytes_read != item.manufacturer.count {
-        mem.free(item.name.data)
-        mem.free(item.manufacturer.data)
-        bufio.reader_destroy(&reader)
-        return false, item
-    }
-
-    bufio.reader_destroy(&reader)
-    return true, item
-}
-
-
-// Read all inventory items from the stream.
-read_full_inventory :: proc(handle: os.Handle) -> []InventoryItem {
-    // Reset stream position to start.
-    os.seek(handle, 0, os.SEEK_SET)
-    items: []InventoryItem = nil
-    for {
-        success, item := read_item(handle)
-        if !success { break }
-        items = append(items, item)
-    }
-    return items
-}
-
-*/
 
 // Save the inventory file.
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
@@ -204,21 +98,7 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
     return true
 }
 
-/*
-// Change this to find item by name.
-// Find an inventory item by id.
-find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
-    os.seek(file, 0, os.SEEK_SET)
-    for {
-        success, item := read_item(file)
-        if !success { break }
-        if item.id == search_id {
-            return true, item
-        }
-    }
-    return false, InventoryItem{}
-}
-    */
+
 
 // Update an inventory item's quantity.
 // Reads the item, updates the quantity, then seeks back to the quantity field.
@@ -259,11 +139,6 @@ update_inventory_price :: proc(handle: os.Handle, search_id: i32, new_price: f32
     return false
 }
 
-// remove_item :: 
-
-// full_inventory_value ::
-
-// all_items_by_manufacturer ::
 
 // Test functions for the inventory system.
 test_database :: proc(handle: os.Handle) {
