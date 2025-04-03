@@ -144,86 +144,31 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
     db.items = append(db.items, new_item); // Append the new item to the dynamic array
     fmt.println("Item successfully added to database:", new_item.id);
 }
-// Function to serialize an InventoryItem
-serialize_item :: proc(item: InventoryItem, allocator: mem.Allocator) -> []u8 {
-    // Calculate total size needed: 
-    // - 2 * i32 (id + quantity) → 8 bytes
-    // - 1 * f32 (price) → 4 bytes
-    // - 2 * int (string lengths) → depends on architecture (typically 8-16 bytes)
-    // - Actual string bytes (name and manufacturer)
-    total_size := 8 + 4 + 8 + item.name.count + item.manufacturer.count
-    buffer, err := mem.alloc(allocator, total_size) // Allocate buffer for all data
-    db.items = append(db.items, new_item); // Append the new item to the dynamic array
-    total_size := 8 + 4 + 8 + item.name.count + item.manufacturer.count
-    // Initialize offset to 0
-    offset := 0
-    // Offset += 4 is telling the script to look 4 bytes past the last 'object' copied, aka one index away
-    mem.copy(buffer[offset:offset+4], transmute([4]u8)&item.id)
-        return nil // Return nil or handle the error appropriately
-    mem.copy(buffer[offset:offset+4], transmute([4]u8)&item.price)
-    db.items = append(db.items, new_item); // Append the new item to the dynamic array
-    fmt.println("Item successfully added to database:", new_item.id);
-    offset += 4
-    mem.copy(buffer[offset:offset+4], transmute([4]u8)item.price)
-    offset += 4
-    mem.copy(buffer[offset:offset+4], transmute([4]u8)item.name.count)
-    offset += 4
-    mem.copy(buffer[offset:offset+4], transmute([4]u8)item.manufacturer.count)
-    offset += 4
 
-    // Copy string data
-    mem.copy(buffer[offset:offset+item.name.count], item.name.data)
-    offset += item.name.count
-    mem.copy(buffer[offset:offset+item.manufacturer.count], item.manufacturer.data)
-    offset += item.manufacturer.count
-
+// Serialize the inventory database into a binary format
 serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
-    estimated_size := 0
-    buffer := bytes.Buffer{}
-    bytes.buffer_init(&buffer, estimated_size)
     buffer: bytes.Buffer
-    bytes.buffer_init(&buffer, estimated_size)
-    if err := buffer.write_u32(item_count); err != .None {
-        fmt.println("Error: Failed to write item count to buffer. Error:", err)
-        return bytes.Buffer{}
-    }
+    bytes.buffer_init(&buffer, nil) // Initialize the buffer
 
-    // Serialize each item
+    // Serialize the number of items in the array
+    item_count := i32(len(database.items))
+    buffer.write_u32(item_count)
+
+    // Serialize each item in the array
     for item in database.items {
-        if err := buffer.write_u32(item.id); err != .None {
-            fmt.println("Error: Failed to write item ID to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
-        if err := buffer.write_u32(item.quantity); err != .None {
-            fmt.println("Error: Failed to write item quantity to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
-        if err := buffer.write_f32(item.price); err != .None {
-            fmt.println("Error: Failed to write item price to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
+        buffer.write_u32(item.id)           // Serialize item ID
+        buffer.write_u32(item.quantity)    // Serialize item quantity
+        buffer.write_f32(item.price)       // Serialize item price
 
-        // Serialize name
+        // Serialize the name
         name_data := []u8(item.name)
-        if err := buffer.write_u32(len(name_data)); err != .None {
-            fmt.println("Error: Failed to write name length to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
-        if err := buffer.write(name_data); err != .None {
-            fmt.println("Error: Failed to write name data to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
+        buffer.write_u32(len(name_data))   // Serialize name length
+        buffer.write(name_data)            // Serialize name data
 
-        // Serialize manufacturer
+        // Serialize the manufacturer
         manufacturer_data := []u8(item.manufacturer)
-        if err := buffer.write_u32(len(manufacturer_data)); err != .None {
-            fmt.println("Error: Failed to write manufacturer length to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
-        if err := buffer.write(manufacturer_data); err != .None {
-            fmt.println("Error: Failed to write manufacturer data to buffer. Error:", err)
-            return bytes.Buffer{}
-        }
+        buffer.write_u32(len(manufacturer_data)) // Serialize manufacturer length
+        buffer.write(manufacturer_data)          // Serialize manufacturer data
     }
 
     return buffer
@@ -232,36 +177,28 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
 deserialize_inventory :: proc(buffer: bytes.Buffer) -> InventoryDatabase {
     db: InventoryDatabase
     reader: bytes.Reader
-    bytes.reader_init(&reader, buffer)
+    bytes.reader_init(&reader, buffer.data)
 
-    // Read item count
-    if bytes.reader_remaining(&reader) < 4 {
-        fmt.println("Error: Buffer underflow while reading item count.")
-        return InventoryDatabase{}
-    }
-    item_count := bytes.reader_read_u32(&reader)
-    db.items = make([dynamic]InventoryItem, 0, item_count)[:]
+    // Read the number of items in the array
+    item_count := reader.read_u32()
+    db.items = make([dynamic]InventoryItem, 0, item_count)
 
-    // Read each item
+    // Deserialize each item in the array
     for _ in 0..<item_count {
         item: InventoryItem
 
-        if bytes.reader_remaining(&reader) < 12 {
-            fmt.println("Error: Buffer underflow while reading item attributes.")
-            return InventoryDatabase{}
-        }
-        item.id = bytes.reader_read_u32(&reader)
-        item.quantity = bytes.reader_read_u32(&reader)
-        item.price = bytes.reader_read_f32(&reader)
+        item.id = reader.read_u32()           // Deserialize item ID
+        item.quantity = reader.read_u32()    // Deserialize item quantity
+        item.price = reader.read_f32()       // Deserialize item price
 
-        // Read name
-        name_length := bytes.reader_read_u32(&reader)
-        name_data := make([]u8, name_length)[:]
-        bytes.reader_read(&reader, name_data)
+        // Deserialize the name
+        name_length := reader.read_u32()
+        name_data := make([]u8, name_length)
+        reader.read(name_data)
         item.name = string(name_data)
 
-        // Read manufacturer
-        manufacturer_length := bytes.reader_read_u32(&reader)
+        // Deserialize the manufacturer
+        manufacturer_length := reader.read_u32()
         manufacturer_data := make([]u8, manufacturer_length)
         reader.read(manufacturer_data)
         item.manufacturer = string(manufacturer_data)
@@ -352,8 +289,6 @@ deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer, arena: ^Arena) ->
         }
         db.items = append(db.items, copied_item)
     return db
-
-    return db
 }
 
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
@@ -363,6 +298,7 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
         fmt.println("Error: Failed to save inventory to file:", file_name)
         return false
     }
+    return true
 }
 
 load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
@@ -374,15 +310,6 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
 
     buffer := bytes.Buffer{data = file_data}
     db := deserialize_inventory(buffer)
-
-    // Validate deserialized data
-    for item in db.items {
-        if len(item.name) == 0 || len(item.manufacturer) == 0 || item.quantity < 0 || item.price < 0 {
-            fmt.println("Error: Corrupted or invalid data in inventory file:", file_name)
-            return false, InventoryDatabase{}
-        }
-    }
-
     return true, db
 }
 
