@@ -31,60 +31,23 @@ InventoryDatabase :: struct {
     items: []InventoryItem // Dynamic array of inventory items
 }
 
-// Global Variables
-inventory_items: []InventoryItem
-serialized_items: [][]u8
-
-
-arena: vmem.Arena // Declare the arena variable
-
-// Initialize the arena before using it
-init_arena :: proc() {
-    vmem.arena_init_growing(&arena, BUFFER_SIZE)
-}
-
-// Call the initialization function at the start of the program
-init_arena()
-// Create an allocator from the arena
-
-
-// Global Variables
-inventory_items: []InventoryItem
-serialized_items: [][]u8
-
 
 // Function to log operations
 log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
-Arena :: struct {
-    memory: []u8,
-    offset: int,
+arena: vmem.Arena // Declare the global arena variable
+
+// Initialize the arena before using it
+init_arena :: proc() {
+    BUFFER_SIZE :: 1_000_000 // Initial size of 1 MB
+    vmem.arena_init_growing(&arena, BUFFER_SIZE)
 }
 
-arena_init :: proc(size: int) -> Arena {
-    return Arena{
-        memory = make([]u8, size),
-        offset = 0,
-    }
-}
-
-arena_alloc :: proc(arena: ^Arena, size: int) -> ^u8 {
-    if arena.offset + size > len(arena.memory) {
-        fmt.println("Error: Arena out of memory.")
-        return nil
-    }
-    ptr := &arena.memory[arena.offset]
-    arena.offset += size
-    return ptr
-}
-
-// Resets the arena's offset to zero, effectively marking all previously allocated memory as reusable.
-// Note: This does not deallocate or clear the memory, so any pointers to previously allocated memory
-// will become invalid. Use with caution to avoid memory safety issues.
-arena_reset :: proc(arena: ^Arena) {
-    arena.offset = 0
+// Reset the arena to reuse memory
+reset_arena :: proc() {
+    vmem.arena_reset(&arena)
 }
 
 // Adds a new item to the inventory database.
@@ -101,6 +64,7 @@ arena_reset :: proc(arena: ^Arena) {
 // Returns:
 // - true if the item was successfully added to the database.
 // - false if the item could not be added due to validation errors or duplicate ID.
+
 add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
     // Validate that name and manufacturer are non-empty
     if len(name) == 0 {
@@ -161,29 +125,27 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
         buffer.write_f32(item.price)       // Serialize item price
 
         // Serialize the name
-        name_data := []u8(item.name)
-        buffer.write_u32(len(name_data))   // Serialize name length
-        buffer.write(name_data)            // Serialize name data
+        buffer.write_u32(item.name.count)  // Serialize name length
+        buffer.write(item.name.data)       // Serialize name data
 
         // Serialize the manufacturer
-        manufacturer_data := []u8(item.manufacturer)
-        buffer.write_u32(len(manufacturer_data)) // Serialize manufacturer length
-        buffer.write(manufacturer_data)          // Serialize manufacturer data
+        buffer.write_u32(item.manufacturer.count) // Serialize manufacturer length
+        buffer.write(item.manufacturer.data)      // Serialize manufacturer data
     }
 
     return buffer
 }
 
-deserialize_inventory :: proc(buffer: bytes.Buffer) -> InventoryDatabase {
+deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer, arena: ^Arena) -> InventoryDatabase {
     db: InventoryDatabase
     reader: bytes.Reader
     bytes.reader_init(&reader, buffer.data)
 
     // Read the number of items in the array
     item_count := reader.read_u32()
-    db.items = make([dynamic]InventoryItem, 0, item_count)
+    db.items = make([]InventoryItem, 0, item_count)
 
-    // Deserialize each item in the array
+    // Deserialize each item
     for _ in 0..<item_count {
         item: InventoryItem
 
@@ -191,103 +153,27 @@ deserialize_inventory :: proc(buffer: bytes.Buffer) -> InventoryDatabase {
         item.quantity = reader.read_u32()    // Deserialize item quantity
         item.price = reader.read_f32()       // Deserialize item price
 
-        // Deserialize the name
+        // Deserialize name
         name_length := reader.read_u32()
-        name_data := make([]u8, name_length)
-        reader.read(name_data)
-        item.name = string(name_data)
+        name_data := arena_alloc(arena, name_length)
+        reader.read(name_data[:name_length])
+        item.name = StringData{
+            count = name_length,
+            data = name_data[:name_length],
+        }
 
-        // Deserialize the manufacturer
+        // Deserialize manufacturer
         manufacturer_length := reader.read_u32()
-        manufacturer_data := make([]u8, manufacturer_length)
-        reader.read(manufacturer_data)
-        item.manufacturer = string(manufacturer_data)
+        manufacturer_data := arena_alloc(arena, manufacturer_length)
+        reader.read(manufacturer_data[:manufacturer_length])
+        item.manufacturer = StringData{
+            count = manufacturer_length,
+            data = manufacturer_data[:manufacturer_length],
+        }
 
         db.items = append(db.items, item)
     }
 
-    return db
-}
-
-deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer, arena: ^Arena) -> InventoryDatabase {
-    db: InventoryDatabase
-    reader: bytes.Reader
-    bytes.reader_init(&reader, buffer.memory)
-
-    // Read item count
-    if bytes.reader_remaining(&reader) < 4 {
-    db.items = make([]InventoryItem, 0)
-        return InventoryDatabase{}
-
-    }
-    item_count := reader.read_u32()
-    if item_count < 0 || item_count > 1_000_000 { // Arbitrary upper limit for validation
-        fmt.println("Error: Invalid item count value:", item_count)
-        return InventoryDatabase{}
-    }
-    db.items = make([]InventoryItem, 0, item_count)
-
-    // Read each item
-    for _ in 0..<item_count {
-        item := ^InventoryItem(arena_alloc(arena, size_of(InventoryItem)))
-        if item == nil {
-            fmt.println("Error: Failed to allocate memory for InventoryItem.")
-            return InventoryDatabase{}
-        }
-        item.name = StringData{}
-        item.manufacturer = StringData{}
-        if item == nil {
-            fmt.println("Error: Failed to allocate memory for InventoryItem.")
-            return InventoryDatabase{}
-        }
-
-        name_data_ptr := arena_alloc(arena, name_length)
-        if name_data_ptr == nil {
-            fmt.println("Error: Failed to allocate memory for name.")
-            if !utf8.is_valid(name_data[:name_length]) {
-                fmt.println("Error: Invalid UTF-8 data for name.")
-                return InventoryDatabase{}
-            }
-            item.name = string(name_data[:name_length])
-            return InventoryDatabase{}
-        }
-        name_data := name_data_ptr[:name_length]
-        name_data := arena_alloc(arena, name_length)
-        name_slice := name_data[:name_length]
-        reader.read(name_slice)
-        item.name = string(name_slice)
-
-        // Read manufacturer
-        manufacturer_length := reader.read_u32()
-        manufacturer_data := arena_alloc(arena, manufacturer_length)
-        manufacturer_slice := manufacturer_data[:manufacturer_length]
-        reader.read(manufacturer_slice)
-        item.manufacturer = string(manufacturer_slice)
-        // Read manufacturer
-        manufacturer_length := reader.read_u32()
-        manufacturer_data := arena_alloc(arena, manufacturer_length)
-        reader.read(manufacturer_data[:manufacturer_length])
-        if !utf8.is_valid(manufacturer_data[:manufacturer_length]) {
-            fmt.println("Error: Invalid UTF-8 data for manufacturer.")
-            return InventoryDatabase{}
-        }
-        item.manufacturer = string(manufacturer_data[:manufacturer_length])
-
-        // Create a copy of the item to avoid referencing arena memory
-        copied_item := InventoryItem{
-            id = item.id,
-            quantity = item.quantity,
-            price = item.price,
-            name = StringData{
-                count = item.name.count,
-                data = item.name.data[:],
-            },
-            manufacturer = StringData{
-                count = item.manufacturer.count,
-                data = item.manufacturer.data[:],
-            },
-        }
-        db.items = append(db.items, copied_item)
     return db
 }
 
@@ -309,11 +195,11 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
     }
 
     buffer := bytes.Buffer{data = file_data}
-    db := deserialize_inventory(buffer)
+    db := deserialize_inventory_with_arena(buffer, &arena)
     return true, db
 }
 
-update_inventory_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32) -> bool {
+update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32) -> bool {
     for i in 0..<len(db.items) {
         if db.items[i].id == id {
             if sold_quantity > db.items[i].quantity {
@@ -324,13 +210,12 @@ update_inventory_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity
             log_operation("Updated Quantity", db.items[i])
             return true
         }
-        items = append(items, item)
     }
     fmt.println("Error: Item with ID", id, "not found.")
     return false
 }
 
-update_inventory_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bool {
+update_item_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bool {
     if new_price < 0 {
         fmt.println("Error: New price cannot be negative.")
         return false
@@ -390,8 +275,8 @@ test_inventory_system :: proc() {
     }
 
     // Update and remove items
-    update_inventory_quantity(&db, 1, 10)
-    update_inventory_price(&db, 2, 249.99)
+    update_item_quantity(&db, 1, 10)
+    update_item_price(&db, 2, 249.99)
     remove_item(&db, 3)
 
     // Save updated inventory
