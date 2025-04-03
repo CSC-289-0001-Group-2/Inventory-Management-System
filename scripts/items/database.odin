@@ -16,7 +16,6 @@ arena := vmem.Arena
 
 
 // Writer
-
 StringData :: struct {
     count: int,    // Number of bytes in the string
     data: []u8,    // String content (no mem.alloc!)
@@ -92,7 +91,6 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
 
 
 // Reader
-
 read_inventory :: proc(file_name: string) -> []InventoryItem {
     // Read entire file into memory
     file_data, success := os.read_entire_file(file_name)
@@ -163,7 +161,6 @@ read_inventory :: proc(file_name: string) -> []InventoryItem {
 
 
 // Functions
-
 // Change this to find item by name.
 // Find an inventory item by id.
 find_item :: proc(file: os.File, search_id: i32) -> (bool, InventoryItem) {
