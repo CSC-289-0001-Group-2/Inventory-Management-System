@@ -5,6 +5,7 @@
 Holds individual item information such as:
 
 - **Name**: String - The name of the item.
+- **Description**: - The description of the item.
 - **Price**: Float - The price of the item.
 - **Amount**: Int - Quantity available in stock.
 - **Manufacturer**: String - The name of the manufacturer.

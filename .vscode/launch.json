@@ -1,6 +1,11 @@
 {
     "version": "0.2.0",
     "configurations": [
+        // odin run 
+        // "C:\Users\docto\Documents\Programming Capstone Project\Inventory-Management-System\Assets\scripts\Interface.odin" 
+        // -file
+        
+        
         {
             "type": "cppvsdbg",
             "request": "launch",
