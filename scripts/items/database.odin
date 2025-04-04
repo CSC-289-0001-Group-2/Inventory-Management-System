@@ -28,26 +28,22 @@ log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
-// Adds a new item to the inventory database.
-// This function checks for duplicate IDs before adding the item.
-// If a duplicate ID is detected, the function will return false and the item will not be added.
-// Parameters:
-// - db: Pointer to the InventoryDatabase where the item will be added.
-// - id: Unique identifier for the item.
-// - quantity: Number of items available in stock.
-// - price: Price of the item.
-// - name: Name of the item.
-// - manufacturer: Manufacturer of the item.
-// Returns:
-// - true if the item was successfully added to the database.
-// - false if the item could not be added due to validation errors or duplicate ID.
-add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
-    // Check for duplicate IDs by iterating over db.items
-    for item in db.items {
-        if item.id == id {
-            fmt.println("Error: Item with ID", id, "already exists.")
-            return false
+// Find an item in the inventory database by its ID
+find_item_by_id :: proc(db: ^InventoryDatabase, id: i32) -> ^InventoryItem {
+    for i in 0..<len(db.items) {
+        if db.items[i].id == id {
+            return &db.items[i]
         }
+    }
+    return nil
+}
+
+// Adds a new item to the inventory database.
+add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
+    // Check for duplicate IDs using find_item_by_id
+    if find_item_by_id(db, id) != nil {
+        fmt.println("Error: Item with ID", id, "already exists.")
+        return false
     }
 
     // Create a new InventoryItem
@@ -64,6 +60,65 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
 
     fmt.println("Item successfully added: ID =", id, "Name =", name)
     return true
+}
+
+// Update the quantity of an item in the inventory
+update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32) -> bool {
+    item := find_item_by_id(db, id)
+    if item == nil {
+        fmt.println("Error: Item with ID", id, "not found.")
+        return false
+    }
+    item.quantity -= sold_quantity
+    log_operation("Updated Quantity", *item)
+    return true
+}
+
+// Update the price of an item in the inventory
+update_item_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bool {
+    if new_price < 0 {
+        fmt.println("Error: New price cannot be negative.")
+        return false
+    }
+    item := find_item_by_id(db, id)
+    if item == nil {
+        fmt.println("Error: Item with ID", id, "not found.")
+        return false
+    }
+    item.price = new_price
+    log_operation("Updated Price", *item)
+    return true
+}
+
+// Removes an item from the inventory database by its ID
+remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
+    item := find_item_by_id(db, id)
+    if item == nil {
+        fmt.println("Error: Item with ID", id, "not found.")
+        return false
+    }
+
+    // Find the index of the item to remove
+    for i in 0..<len(db.items) {
+        if &db.items[i] == item {
+            log_operation("Removed", db.items[i])
+            db.items[i] = db.items[len(db.items) - 1] // Replace with the last item
+            resize(&db.items, len(db.items) - 1)     // Resize the array
+            return true
+        }
+    }
+
+    return false
+}
+
+// Search for an item in the inventory database by its ID and print the result
+search_item :: proc(db: ^InventoryDatabase, id: i32) {
+    item := find_item_by_id(db, id)
+    if item != nil {
+        fmt.println("Item found: ID =", item.id, "Name =", item.name)
+    } else {
+        fmt.println("Item with ID", id, "not found.")
+    }
 }
 
 // Serialize the inventory database into a binary format
@@ -174,15 +229,15 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
     }
     defer os.close(file)
 
-    reader := bufio.Reader{}
-    bufio.reader_init(&reader, file)
+    buf_reader := bufio.Reader{}
+    bufio.reader_init(&buf_reader, file)
 
     buffer := bytes.Buffer{}
     bytes.buffer_init(&buffer, nil)
 
     temp := make([]u8, 1024)
     for {
-        n, err := bufio.reader_read(&reader, temp)
+        n, err := bufio.reader_read(&buf_reader, temp)
         if err == .EOF {
             break
         }
@@ -190,56 +245,50 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
             fmt.println("Error: Failed to read from file:", file_name)
             return false, InventoryDatabase{}
         }
-        append(&buffer.buf, temp[:n]...)
+        append(&buffer.buf, temp[:n])
     }
 
-    db := deserialize_inventory_with_arena(buffer)
+    // Deserialize the buffer directly
+    binary_reader := bytes.Reader{}
+    bytes.reader_init(&binary_reader, buffer.buf)
+
+    db: InventoryDatabase
+    // Read the number of items in the array
+    item_count: u32
+    bytes.reader_read(&binary_reader, ^u8(&item_count), size_of(item_count))
+    db.items = make([dynamic]InventoryItem, 0)
+
+    // Deserialize each item
+    for _ in 0..<item_count {
+        item: InventoryItem
+
+        // Deserialize item ID
+        bytes.reader_read(&binary_reader, ^u8(&item.id), size_of(item.id))
+
+        // Deserialize item quantity
+        bytes.reader_read(&binary_reader, ^u8(&item.quantity), size_of(item.quantity))
+
+        // Deserialize item price
+        bytes.reader_read(&binary_reader, ^u8(&item.price), size_of(item.price))
+
+        // Deserialize name
+        name_length: u32
+        bytes.reader_read(&binary_reader, ^u8(&name_length), size_of(name_length))
+        name_data := make([]u8, name_length)
+        bytes.reader_read(&binary_reader, name_data, name_length)
+        item.name = string(name_data)
+
+        // Deserialize manufacturer
+        manufacturer_length: u32
+        bytes.reader_read(&binary_reader, ^u8(&manufacturer_length), size_of(manufacturer_length))
+        manufacturer_data := make([]u8, manufacturer_length)
+        bytes.reader_read(&binary_reader, manufacturer_data, manufacturer_length)
+        item.manufacturer = string(manufacturer_data)
+
+        append(&db.items, item)
+    }
+
     return true, db
-}
-
-// Update the quantity of an item in the inventory
-update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32) -> bool {
-    for i in 0..<len(db.items) {
-        if db.items[i].id == id {
-                        db.items[i].quantity -= sold_quantity
-            log_operation("Updated Quantity", db.items[i])
-            return true
-        }
-    }
-    fmt.println("Error: Item with ID", id, "not found.")
-    return false
-}
-
-// Update the price of an item in the inventory
-update_item_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bool {
-    if new_price < 0 {
-        fmt.println("Error: New price cannot be negative.")
-        return false
-    }
-    for i in 0..<len(db.items) {
-        if db.items[i].id == id {
-            db.items[i].price = new_price
-            log_operation("Updated Price", db.items[i])
-            return true
-        }
-    }
-    fmt.println("Error: Item with ID", id, "not found.")
-    return false
-}
-
-// Removes an item from the inventory database by its ID
-remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
-    for i in 0..<len(db.items) {
-        if db.items[i].id == id {
-            log_operation("Removed", db.items[i])
-            // Replace the item to be removed with the last item in the array
-            db.items[i] = db.items[len(db.items) - 1]
-            resize(&db.items, len(db.items) - 1) // Resize the array
-            return true
-        }
-    }
-    fmt.println("Error: Item with ID", id, "not found.")
-    return false
 }
 
 // Test the inventory management system
@@ -266,8 +315,12 @@ test_inventory_system :: proc() {
         }
     }
 
-    // Update the quantity of an item
-    update_item_quantity(&db, 1, 10)
+    // Check if an item exists before updating its quantity
+    if find_item_by_id(&db, 1) != nil {
+        update_item_quantity(&db, 1, 10)
+    } else {
+        fmt.println("Item with ID 1 does not exist.")
+    }
 
     // Update the price of an item
     update_item_price(&db, 2, 249.99)
