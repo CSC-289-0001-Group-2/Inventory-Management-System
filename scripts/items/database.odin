@@ -229,15 +229,15 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
     }
     defer os.close(file)
 
-    reader := bufio.Reader{}
-    bufio.reader_init(&reader, file)
+    buf_reader := bufio.Reader{}
+    bufio.reader_init(&buf_reader, file)
 
     buffer := bytes.Buffer{}
     bytes.buffer_init(&buffer, nil)
 
     temp := make([]u8, 1024)
     for {
-        n, err := bufio.reader_read(&reader, temp)
+        n, err := bufio.reader_read(&buf_reader, temp)
         if err == .EOF {
             break
         }
@@ -245,10 +245,49 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
             fmt.println("Error: Failed to read from file:", file_name)
             return false, InventoryDatabase{}
         }
-        append(&buffer.buf, temp[:n]...)
+        append(&buffer.buf, temp[:n])
     }
 
-    db := deserialize_inventory_with_arena(buffer)
+    // Deserialize the buffer directly
+    binary_reader := bytes.Reader{}
+    bytes.reader_init(&binary_reader, buffer.buf)
+
+    db: InventoryDatabase
+    // Read the number of items in the array
+    item_count: u32
+    bytes.reader_read(&binary_reader, ^u8(&item_count), size_of(item_count))
+    db.items = make([dynamic]InventoryItem, 0)
+
+    // Deserialize each item
+    for _ in 0..<item_count {
+        item: InventoryItem
+
+        // Deserialize item ID
+        bytes.reader_read(&binary_reader, ^u8(&item.id), size_of(item.id))
+
+        // Deserialize item quantity
+        bytes.reader_read(&binary_reader, ^u8(&item.quantity), size_of(item.quantity))
+
+        // Deserialize item price
+        bytes.reader_read(&binary_reader, ^u8(&item.price), size_of(item.price))
+
+        // Deserialize name
+        name_length: u32
+        bytes.reader_read(&binary_reader, ^u8(&name_length), size_of(name_length))
+        name_data := make([]u8, name_length)
+        bytes.reader_read(&binary_reader, name_data, name_length)
+        item.name = string(name_data)
+
+        // Deserialize manufacturer
+        manufacturer_length: u32
+        bytes.reader_read(&binary_reader, ^u8(&manufacturer_length), size_of(manufacturer_length))
+        manufacturer_data := make([]u8, manufacturer_length)
+        bytes.reader_read(&binary_reader, manufacturer_data, manufacturer_length)
+        item.manufacturer = string(manufacturer_data)
+
+        append(&db.items, item)
+    }
+
     return true, db
 }
 
