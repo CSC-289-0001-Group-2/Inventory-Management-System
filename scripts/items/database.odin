@@ -6,6 +6,7 @@ package items
 import "core:fmt"
 import "core:os"
 import "core:bytes"
+import "core:bufio"
 
 // Global Struct Definitions
 
@@ -20,7 +21,6 @@ InventoryItem :: struct {
 
 InventoryDatabase :: struct {
     items: [dynamic]InventoryItem, // Use a dynamic array instead of a slice
-    items_map: map[i32]bool        // Hash map for quick ID lookup
 }
 
 // Function to log operations
@@ -42,10 +42,12 @@ log_operation :: proc(operation: string, item: InventoryItem) {
 // - true if the item was successfully added to the database.
 // - false if the item could not be added due to validation errors or duplicate ID.
 add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
-    // Check for duplicate IDs
-    if db.items_map[id] {
-        fmt.println("Error: Item with ID", id, "already exists.")
-        return false
+    // Check for duplicate IDs by iterating over db.items
+    for item in db.items {
+        if item.id == id {
+            fmt.println("Error: Item with ID", id, "already exists.")
+            return false
+        }
     }
 
     // Create a new InventoryItem
@@ -59,9 +61,6 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
 
     // Append the new item to the items array
     append(&db.items, new_item) // Use a pointer to the dynamic array
-
-    // Add the ID to the items_map
-    db.items_map[id] = true
 
     fmt.println("Item successfully added: ID =", id, "Name =", name)
     return true
@@ -147,26 +146,53 @@ deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer) -> InventoryDatab
     return db
 }
 
-// Save the inventory database to a file
+// Save the inventory database to a file using bufio.Writer
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
-    buffer := serialize_inventory(database)
-    success := os.write_entire_file(file_name, buffer.data, true)
+    file, success := os.open(file_name, .Write | .Create)
     if !success {
-        fmt.println("Error: Failed to save inventory to file:", file_name)
+        fmt.println("Error: Failed to create file:", file_name)
         return false
     }
+    defer os.close(file)
+
+    writer := bufio.Writer{}
+    bufio.writer_init(&writer, file)
+
+    buffer := serialize_inventory(database)
+    bufio.writer_write(&writer, buffer.buf)
+    bufio.writer_flush(&writer)
+
     return true
 }
 
-// Load the inventory database from a file
+// Load the inventory database from a file using bufio.Reader
 load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
-    file_data, success := os.read_entire_file(file_name)
+    file, success := os.open(file_name, .Read)
     if !success {
-        fmt.println("Error: Failed to load inventory from file:", file_name)
+        fmt.println("Error: Failed to open file:", file_name)
         return false, InventoryDatabase{}
     }
+    defer os.close(file)
 
-    buffer := bytes.Buffer{data = file_data}
+    reader := bufio.Reader{}
+    bufio.reader_init(&reader, file)
+
+    buffer := bytes.Buffer{}
+    bytes.buffer_init(&buffer, nil)
+
+    temp := make([]u8, 1024)
+    for {
+        n, err := bufio.reader_read(&reader, temp)
+        if err == .EOF {
+            break
+        }
+        if err != .None {
+            fmt.println("Error: Failed to read from file:", file_name)
+            return false, InventoryDatabase{}
+        }
+        append(&buffer.buf, temp[:n]...)
+    }
+
     db := deserialize_inventory_with_arena(buffer)
     return true, db
 }
@@ -221,7 +247,6 @@ test_inventory_system :: proc() {
     // Create an empty InventoryDatabase
     db: InventoryDatabase = InventoryDatabase{
         items = make([dynamic]InventoryItem, 0), // Initialize as a dynamic array
-        items_map = make(map[i32]bool),         // Initialize as an empty map
     }
 
     // Add items to the inventory
