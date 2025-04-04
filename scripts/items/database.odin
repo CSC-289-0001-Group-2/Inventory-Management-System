@@ -284,37 +284,44 @@ remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
 
 // This procedure tests the functionality of the inventory management system.
 // It validates adding, saving, loading, updating, and removing items from the inventory.
-    // Preallocate capacity for db.items to reduce reallocations
-    expected_item_count := 100 // Adjust this value based on your expected number of items
-    db.items = make([]InventoryItem, 0, expected_item_count)
+test_inventory_system :: proc() {
+    // Initialize the Arena
+    init_arena()
 
-    // Add items
-    add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh", &arena)
+    // Create an empty InventoryDatabase
+    db: InventoryDatabase
 
-    // Add items
+    // Add items to the inventory
     add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh", &arena)
     add_item(&db, 2, 5, 299.99, "Sword", "Camelot", &arena)
     add_item(&db, 3, 20, 60.00, "Skateboard", "Birdhouse", &arena)
 
-    // Save to file
+    // Save the inventory to a file
     save_inventory("inventory.dat", db)
 
-    // Load from file
+    // Load the inventory from the file
     success, loaded_db := load_inventory("inventory.dat")
     if success {
         fmt.println("Loaded Inventory:")
         for item in loaded_db.items {
-            fmt.println(item)
+            fmt.println("ID:", item.id, "Name:", string(item.name.data), "Quantity:", item.quantity, "Price:", item.price, "Manufacturer:", string(item.manufacturer.data))
         }
     }
 
-    // Update and remove items
+    // Update the quantity of an item
     update_item_quantity(&db, 1, 10)
+
+    // Update the price of an item
     update_item_price(&db, 2, 249.99)
+
+    // Remove an item from the inventory
     remove_item(&db, 3)
 
-    // Save updated inventory
+    // Save the updated inventory to a new file
     save_inventory("inventory_updated.dat", db)
+
+    // Reset the Arena to free memory
+    reset_arena()
 }
 
 // The main procedure serves as the entry point for the program.
