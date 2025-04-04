@@ -48,7 +48,7 @@ add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string
 
     // Create a new InventoryItem
     new_item := InventoryItem{
-        id = len(db.items) + 1, // Assign a unique ID based on the array length
+        id = cast(i32)(len(db.items) + 1), // Assign a unique ID based on the array length
         quantity = quantity,
         price = price,
         name = name,
