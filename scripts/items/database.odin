@@ -128,30 +128,30 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
 
     // Serialize the number of items in the array
     item_count := i32(len(database.items))
-    bytes.buffer_write(&buffer, (^u8(&item_count)), size_of(item_count)) // Write item count as bytes
+    bytes.buffer_write(&buffer, []u8{cast(^u8)&item_count, size_of(item_count)}) // Write item count as bytes
 
     // Serialize each item in the array
     for i in 0..<len(database.items) {
         item := database.items[i] // Access each item explicitly
 
         // Serialize item ID
-        bytes.buffer_write(&buffer, (^u8(&item.id)), size_of(item.id))
+        bytes.buffer_write(&buffer, []u8{cast(^u8)&item.id, size_of(item.id)})
 
         // Serialize item quantity
-        bytes.buffer_write(&buffer, (^u8(&item.quantity)), size_of(item.quantity))
+        bytes.buffer_write(&buffer, []u8{cast(^u8)&item.quantity, size_of(item.quantity)})
 
         // Serialize item price
-        bytes.buffer_write(&buffer, (^u8(&item.price)), size_of(item.price))
+        bytes.buffer_write(&buffer, []u8{cast(^u8)&item.price, size_of(item.price)})
 
         // Serialize the name
         name_length := u32(len(item.name))
-        bytes.buffer_write(&buffer, (^u8(&name_length)), size_of(name_length)) // Write name length
-        bytes.buffer_write(&buffer, []u8(item.name), name_length)             // Write name data
+        bytes.buffer_write(&buffer, []u8{cast(^u8)&name_length, size_of(name_length)}) // Write name length
+        bytes.buffer_write(&buffer, []u8(item.name), name_length)                     // Write name data
 
         // Serialize the manufacturer
         manufacturer_length := u32(len(item.manufacturer))
-        bytes.buffer_write(&buffer, (^u8(&manufacturer_length)), size_of(manufacturer_length)) // Write manufacturer length
-        bytes.buffer_write(&buffer, []u8(item.manufacturer), manufacturer_length)             // Write manufacturer data
+        bytes.buffer_write(&buffer, []u8{cast(^u8)&manufacturer_length, size_of(manufacturer_length)}) // Write manufacturer length
+        bytes.buffer_write(&buffer, []u8(item.manufacturer), manufacturer_length)                     // Write manufacturer data
     }
 
     return buffer
