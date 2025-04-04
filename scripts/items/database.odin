@@ -28,16 +28,6 @@ log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
-// Find an item in the inventory database by its ID
-find_item_by_id :: proc(db: ^InventoryDatabase, id: i32) -> ^InventoryItem {
-    for i in 0..<len(db.items) {
-        if db.items[i].id == id {
-            return &db.items[i]
-        }
-    }
-    return nil
-}
-
 // Find an item in the inventory database by its name
 find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^InventoryItem {
     for i in 0..<len(db.items) {
