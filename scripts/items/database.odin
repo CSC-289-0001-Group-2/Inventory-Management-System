@@ -55,6 +55,24 @@ reset_arena :: proc() {
     vmem.arena_free_all(&arena)
 }
 
+validate_non_empty :: proc(value: string, field_name: string) -> bool {
+    if len(value) == 0 {
+        fmt.println("Error:", field_name, "cannot be empty.")
+        return false
+    }
+    return true
+}
+
+allocate_string :: proc(arena: ^vmem.Arena, value: string, field_name: string) -> ^u8 {
+    data := vmem.arena_alloc(arena, len(value), mem.align_of(u8))
+    if data == nil {
+        fmt.println("Error: Failed to allocate memory for", field_name)
+        return nil
+    }
+    mem.copy(data, []u8(value)) // Copy the string into the allocated memory
+    return data
+}
+
 // Adds a new item to the inventory database.
 // This function checks for duplicate IDs before adding the item.
 // If an item with the same ID already exists, it logs a message and does not add the item.
@@ -74,13 +92,8 @@ reset_arena :: proc() {
 // - false if the item could not be added due to validation errors, duplicate ID, or memory allocation issues.
 
 add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string, arena: ^vmem.Arena) -> bool {
-    // Validate that name and manufacturer are non-empty
-    if len(name) == 0 {
-        fmt.println("Error: Name cannot be empty.")
-        return false
-    }
-    if len(manufacturer) == 0 {
-        fmt.println("Error: Manufacturer cannot be empty.")
+    // Validate inputs
+    if !validate_non_empty(name, "Name") || !validate_non_empty(manufacturer, "Manufacturer") {
         return false
     }
 
@@ -94,29 +107,17 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
     }
     db.items_map[id] = true // Mark the ID as present in the hash map
 
-    // Allocate memory for the name and manufacturer using the Arena
-    name_data := vmem.arena_alloc(arena, len(name), mem.align_of(u8))
+    // Allocate memory for name and manufacturer
+    name_data := allocate_string(arena, name, "name")
     if name_data == nil {
-        fmt.println("Error: Failed to allocate memory for name.")
         return false
     }
-    if len(name_data) < len(name) {
-        fmt.println("Error: Allocated memory for name is insufficient.")
-        return false
-    }
-    mem.copy(name_data, []u8(name)) // Copy the name string into the allocated memory
 
-    manufacturer_data := vmem.arena_alloc(arena, len(manufacturer), mem.align_of(u8))
-    if manufacturer_data == nil || len(manufacturer_data) < len(manufacturer) {
-        fmt.println("Error: Failed to allocate sufficient memory for manufacturer.")
+    manufacturer_data := allocate_string(arena, manufacturer, "manufacturer")
+    if manufacturer_data == nil {
         return false
     }
-    mem.copy(manufacturer_data, []u8(manufacturer)) // Copy the manufacturer string into the allocated memory
-        fmt.println("Error: Failed to allocate memory for manufacturer.")
-        return false
-    }
-    mem.copy(manufacturer_data, []u8(manufacturer)) // Copy the manufacturer string into the allocated memory
-            data = name_data[:len(name)], // Ensure slicing is safe after validation
+
     // Create a new InventoryItem
     new_item: InventoryItem = InventoryItem{
         id = id,
@@ -132,9 +133,9 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
         },
     }
 
-    fmt.println("Item successfully added to database: ID =", new_item.id, ", Name =", string(new_item.name.data), ", Manufacturer =", string(new_item.manufacturer.data))
+    // Append the new item to the database
     db.items = append(db.items, new_item)
-    fmt.println("Item successfully added to database:", new_item.id)
+    fmt.println("Item successfully added to database: ID =", new_item.id)
     return true
 }
 
