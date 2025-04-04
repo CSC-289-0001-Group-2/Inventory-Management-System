@@ -9,6 +9,7 @@ import "core:bytes"
 
 // Global Struct Definitions
 
+/*
 // Struct for in-memory operations
 InventoryItem :: struct {
     id: i32,
@@ -17,6 +18,7 @@ InventoryItem :: struct {
     name: string,
     manufacturer: string,
 }
+    */
 
 InventoryDatabase :: struct {
     items: []InventoryItem, // Dynamic array of inventory items
@@ -30,6 +32,7 @@ log_operation :: proc(operation: string, item: InventoryItem) {
 
 // Adds a new item to the inventory database.
 // This function checks for duplicate IDs before adding the item.
+// If a duplicate ID is detected, the function will return false and the item will not be added.
 // Parameters:
 // - db: Pointer to the InventoryDatabase where the item will be added.
 // - id: Unique identifier for the item.
@@ -41,28 +44,14 @@ log_operation :: proc(operation: string, item: InventoryItem) {
 // - true if the item was successfully added to the database.
 // - false if the item could not be added due to validation errors or duplicate ID.
 add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
-    // Validate inputs
-    if len(name) == 0 {
-        fmt.println("Error: Name cannot be empty.")
-        return false
-    }
-    if len(manufacturer) == 0 {
-        fmt.println("Error: Manufacturer cannot be empty.")
-        return false
-    }
-
     // Check for duplicate IDs
-    if db.items_map == nil {
-        db.items_map = make(map[i32]bool) // Initialize the hash map if not already initialized
-    }
     if db.items_map[id] {
         fmt.println("Error: Item with ID", id, "already exists.")
         return false
     }
-    db.items_map[id] = true // Mark the ID as present in the hash map
 
     // Create a new InventoryItem
-    new_item: InventoryItem = InventoryItem{
+    new_item := InventoryItem{
         id = id,
         quantity = quantity,
         price = price,
@@ -70,9 +59,13 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
         manufacturer = manufacturer,
     }
 
-    // Append the new item to the database
+    // Append the new item to the items array
     db.items = append(db.items, new_item)
-    fmt.println("Item successfully added to database: ID =", new_item.id)
+
+    // Add the ID to the items_map
+    db.items_map[id] = true
+
+    fmt.println("Item successfully added: ID =", id, "Name =", name)
     return true
 }
 
@@ -222,7 +215,10 @@ remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
 // Test the inventory management system
 test_inventory_system :: proc() {
     // Create an empty InventoryDatabase
-    db: InventoryDatabase
+    db: InventoryDatabase = InventoryDatabase{
+        items = make([]InventoryItem, 0), // Initialize as an empty slice
+        items_map = make(map[i32]bool),  // Initialize as an empty map
+    }
 
     // Add items to the inventory
     add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh")
