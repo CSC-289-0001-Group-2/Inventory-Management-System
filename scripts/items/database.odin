@@ -9,7 +9,6 @@ import "core:bytes"
 
 // Global Struct Definitions
 
-/*
 // Struct for in-memory operations
 InventoryItem :: struct {
     id: i32,
@@ -18,11 +17,10 @@ InventoryItem :: struct {
     name: string,
     manufacturer: string,
 }
-    */
 
 InventoryDatabase :: struct {
-    items: []InventoryItem, // Dynamic array of inventory items
-    items_map: map[i32]bool // Hash map for quick ID lookup
+    items: [dynamic]InventoryItem, // Use a dynamic array instead of a slice
+    items_map: map[i32]bool        // Hash map for quick ID lookup
 }
 
 // Function to log operations
@@ -60,7 +58,7 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
     }
 
     // Append the new item to the items array
-    db.items = append(db.items, new_item)
+    append(&db.items, new_item) // Use a pointer to the dynamic array
 
     // Add the ID to the items_map
     db.items_map[id] = true
@@ -79,7 +77,9 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
     bytes.buffer_write(&buffer, ^u8(&item_count), size_of(item_count)) // Write item count as bytes
 
     // Serialize each item in the array
-    for item in database.items {
+    for i in 0..<len(database.items) {
+        item := database.items[i] // Access each item explicitly
+
         // Serialize item ID
         bytes.buffer_write(&buffer, ^u8(&item.id), size_of(item.id))
 
@@ -107,33 +107,41 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
 deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer) -> InventoryDatabase {
     db: InventoryDatabase
     reader: bytes.Reader
-    bytes.reader_init(&reader, buffer.data)
+    bytes.reader_init(&reader, buffer.buf) // Use buffer.buf instead of buffer.data
 
     // Read the number of items in the array
-    item_count := reader.read_u32()
-    db.items = make([]InventoryItem, 0, item_count)
+    item_count: u32
+    bytes.reader_read(&reader, ^u8(&item_count), size_of(item_count)) // Read raw bytes into item_count
+    db.items = make([dynamic]InventoryItem, 0) // Initialize as a dynamic array
 
     // Deserialize each item
     for _ in 0..<item_count {
         item: InventoryItem
 
-        item.id = reader.read_u32()           // Deserialize item ID
-        item.quantity = reader.read_u32()    // Deserialize item quantity
-        item.price = reader.read_f32()       // Deserialize item price
+        // Deserialize item ID
+        bytes.reader_read(&reader, ^u8(&item.id), size_of(item.id))
+
+        // Deserialize item quantity
+        bytes.reader_read(&reader, ^u8(&item.quantity), size_of(item.quantity))
+
+        // Deserialize item price
+        bytes.reader_read(&reader, ^u8(&item.price), size_of(item.price))
 
         // Deserialize name
-        name_length := reader.read_u32()
+        name_length: u32
+        bytes.reader_read(&reader, ^u8(&name_length), size_of(name_length)) // Read name length
         name_data := make([]u8, name_length)
-        reader.read(name_data)
+        bytes.reader_read(&reader, name_data, name_length) // Read name data
         item.name = string(name_data)
 
         // Deserialize manufacturer
-        manufacturer_length := reader.read_u32()
+        manufacturer_length: u32
+        bytes.reader_read(&reader, ^u8(&manufacturer_length), size_of(manufacturer_length)) // Read manufacturer length
         manufacturer_data := make([]u8, manufacturer_length)
-        reader.read(manufacturer_data)
+        bytes.reader_read(&reader, manufacturer_data, manufacturer_length) // Read manufacturer data
         item.manufacturer = string(manufacturer_data)
 
-        db.items = append(db.items, item)
+        append(&db.items, item) // Append to the dynamic array
     }
 
     return db
@@ -167,11 +175,7 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
 update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32) -> bool {
     for i in 0..<len(db.items) {
         if db.items[i].id == id {
-            if sold_quantity > db.items[i].quantity {
-                fmt.println("Error: Sold quantity exceeds available stock for Item ID", id)
-                return false
-            }
-            db.items[i].quantity -= sold_quantity
+                        db.items[i].quantity -= sold_quantity
             log_operation("Updated Quantity", db.items[i])
             return true
         }
@@ -204,7 +208,7 @@ remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
             log_operation("Removed", db.items[i])
             // Replace the item to be removed with the last item in the array
             db.items[i] = db.items[len(db.items) - 1]
-            db.items = db.items[:len(db.items) - 1]
+            resize(&db.items, len(db.items) - 1) // Resize the array
             return true
         }
     }
@@ -216,8 +220,8 @@ remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
 test_inventory_system :: proc() {
     // Create an empty InventoryDatabase
     db: InventoryDatabase = InventoryDatabase{
-        items = make([]InventoryItem, 0), // Initialize as an empty slice
-        items_map = make(map[i32]bool),  // Initialize as an empty map
+        items = make([dynamic]InventoryItem, 0), // Initialize as a dynamic array
+        items_map = make(map[i32]bool),         // Initialize as an empty map
     }
 
     // Add items to the inventory
