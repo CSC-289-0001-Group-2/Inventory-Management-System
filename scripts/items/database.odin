@@ -70,7 +70,7 @@ update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32
         return false
     }
     item.quantity -= sold_quantity
-    log_operation("Updated Quantity", *item)
+    log_operation("Updated Quantity", ^item)
     return true
 }
 
@@ -86,7 +86,7 @@ update_item_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bo
         return false
     }
     item.price = new_price
-    log_operation("Updated Price", *item)
+    log_operation("Updated Price", ^item)
     return true
 }
 
@@ -155,50 +155,6 @@ serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
     }
 
     return buffer
-}
-
-// Deserialize the inventory database from a binary format
-deserialize_inventory_with_arena :: proc(buffer: bytes.Buffer) -> InventoryDatabase {
-    db: InventoryDatabase
-    reader: bytes.Reader
-    bytes.reader_init(&reader, buffer.buf) // Use buffer.buf instead of buffer.data
-
-    // Read the number of items in the array
-    item_count: u32
-    bytes.reader_read(&reader, ^u8(&item_count), size_of(item_count)) // Read raw bytes into item_count
-    db.items = make([dynamic]InventoryItem, 0) // Initialize as a dynamic array
-
-    // Deserialize each item
-    for _ in 0..<item_count {
-        item: InventoryItem
-
-        // Deserialize item ID
-        bytes.reader_read(&reader, ^u8(&item.id), size_of(item.id))
-
-        // Deserialize item quantity
-        bytes.reader_read(&reader, ^u8(&item.quantity), size_of(item.quantity))
-
-        // Deserialize item price
-        bytes.reader_read(&reader, ^u8(&item.price), size_of(item.price))
-
-        // Deserialize name
-        name_length: u32
-        bytes.reader_read(&reader, ^u8(&name_length), size_of(name_length)) // Read name length
-        name_data := make([]u8, name_length)
-        bytes.reader_read(&reader, name_data, name_length) // Read name data
-        item.name = string(name_data)
-
-        // Deserialize manufacturer
-        manufacturer_length: u32
-        bytes.reader_read(&reader, ^u8(&manufacturer_length), size_of(manufacturer_length)) // Read manufacturer length
-        manufacturer_data := make([]u8, manufacturer_length)
-        bytes.reader_read(&reader, manufacturer_data, manufacturer_length) // Read manufacturer data
-        item.manufacturer = string(manufacturer_data)
-
-        append(&db.items, item) // Append to the dynamic array
-    }
-
-    return db
 }
 
 // Save the inventory database to a file using bufio.Writer
