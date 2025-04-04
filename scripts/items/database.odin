@@ -28,10 +28,10 @@ log_operation :: proc(operation: string, item: InventoryItem) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
-// Find an item in the inventory database by its ID
-find_item_by_id :: proc(db: ^InventoryDatabase, id: i32) -> ^InventoryItem {
+// Find an item in the inventory database by its name
+find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^InventoryItem {
     for i in 0..<len(db.items) {
-        if db.items[i].id == id {
+        if db.items[i].name == name {
             return &db.items[i]
         }
     }
@@ -39,16 +39,16 @@ find_item_by_id :: proc(db: ^InventoryDatabase, id: i32) -> ^InventoryItem {
 }
 
 // Adds a new item to the inventory database.
-add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
-    // Check for duplicate IDs using find_item_by_id
-    if find_item_by_id(db, id) != nil {
-        fmt.println("Error: Item with ID", id, "already exists.")
+add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
+    // Check for duplicate names using find_item_by_name
+    if find_item_by_name(db, name) != nil {
+        fmt.println("Error: Item with name", name, "already exists.")
         return false
     }
 
     // Create a new InventoryItem
     new_item := InventoryItem{
-        id = id,
+        id = len(db.items) + 1, // Assign a unique ID based on the array length
         quantity = quantity,
         price = price,
         name = name,
@@ -56,17 +56,17 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
     }
 
     // Append the new item to the items array
-    append(&db.items, new_item) // Use a pointer to the dynamic array
+    append(&db.items, new_item)
 
-    fmt.println("Item successfully added: ID =", id, "Name =", name)
+    fmt.println("Item successfully added: Name =", name)
     return true
 }
 
 // Update the quantity of an item in the inventory
-update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32) -> bool {
-    item := find_item_by_id(db, id)
+update_item_quantity :: proc(db: ^InventoryDatabase, name: string, sold_quantity: i32) -> bool {
+    item := find_item_by_name(db, name)
     if item == nil {
-        fmt.println("Error: Item with ID", id, "not found.")
+        fmt.println("Error: Item with name", name, "not found.")
         return false
     }
     item.quantity -= sold_quantity
@@ -75,14 +75,14 @@ update_item_quantity :: proc(db: ^InventoryDatabase, id: i32, sold_quantity: i32
 }
 
 // Update the price of an item in the inventory
-update_item_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bool {
+update_item_price :: proc(db: ^InventoryDatabase, name: string, new_price: f32) -> bool {
     if new_price < 0 {
         fmt.println("Error: New price cannot be negative.")
         return false
     }
-    item := find_item_by_id(db, id)
+    item := find_item_by_name(db, name)
     if item == nil {
-        fmt.println("Error: Item with ID", id, "not found.")
+        fmt.println("Error: Item with name", name, "not found.")
         return false
     }
     item.price = new_price
@@ -90,11 +90,11 @@ update_item_price :: proc(db: ^InventoryDatabase, id: i32, new_price: f32) -> bo
     return true
 }
 
-// Removes an item from the inventory database by its ID
-remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
-    item := find_item_by_id(db, id)
+// Removes an item from the inventory database by its name
+remove_item :: proc(db: ^InventoryDatabase, name: string) -> bool {
+    item := find_item_by_name(db, name)
     if item == nil {
-        fmt.println("Error: Item with ID", id, "not found.")
+        fmt.println("Error: Item with name", name, "not found.")
         return false
     }
 
@@ -111,13 +111,13 @@ remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
     return false
 }
 
-// Search for an item in the inventory database by its ID and print the result
-search_item :: proc(db: ^InventoryDatabase, id: i32) {
-    item := find_item_by_id(db, id)
+// Search for an item in the inventory database by its name and print the result
+search_item :: proc(db: ^InventoryDatabase, name: string) {
+    item := find_item_by_name(db, name)
     if item != nil {
-        fmt.println("Item found: ID =", item.id, "Name =", item.name)
+        fmt.println("Item found: Name =", item.name, "Quantity =", item.quantity, "Price =", item.price, "Manufacturer =", item.manufacturer)
     } else {
-        fmt.println("Item with ID", id, "not found.")
+        fmt.println("Item with name", name, "not found.")
     }
 }
 
@@ -255,9 +255,9 @@ test_inventory_system :: proc() {
     }
 
     // Add items to the inventory
-    add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh")
-    add_item(&db, 2, 5, 299.99, "Sword", "Camelot")
-    add_item(&db, 3, 20, 60.00, "Skateboard", "Birdhouse")
+    add_item(&db, 50, 0.99, "Apples", "FarmFresh")
+    add_item(&db, 5, 299.99, "Sword", "Camelot")
+    add_item(&db, 20, 60.00, "Skateboard", "Birdhouse")
 
     // Save the inventory to a file
     save_inventory("inventory.dat", db)
@@ -267,22 +267,22 @@ test_inventory_system :: proc() {
     if success {
         fmt.println("Loaded Inventory:")
         for item in loaded_db.items {
-            fmt.println("ID:", item.id, "Name:", item.name, "Quantity:", item.quantity, "Price:", item.price, "Manufacturer:", item.manufacturer)
+            fmt.println("Name:", item.name, "Quantity:", item.quantity, "Price:", item.price, "Manufacturer:", item.manufacturer)
         }
     }
 
     // Check if an item exists before updating its quantity
-    if find_item_by_id(&db, 1) != nil {
-        update_item_quantity(&db, 1, 10)
+    if find_item_by_name(&db, "Apples") != nil {
+        update_item_quantity(&db, "Apples", 10)
     } else {
-        fmt.println("Item with ID 1 does not exist.")
+        fmt.println("Item 'Apples' does not exist.")
     }
 
     // Update the price of an item
-    update_item_price(&db, 2, 249.99)
+    update_item_price(&db, "Sword", 249.99)
 
     // Remove an item from the inventory
-    remove_item(&db, 3)
+    remove_item(&db, "Skateboard")
 
     // Save the updated inventory to a new file
     save_inventory("inventory_updated.dat", db)
