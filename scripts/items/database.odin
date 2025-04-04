@@ -28,7 +28,8 @@ InventoryItem :: struct {
 }
 
 InventoryDatabase :: struct {
-    items: []InventoryItem // Dynamic array of inventory items
+    items: []InventoryItem, // Dynamic array of inventory items
+    items_map: map[i32]bool // Hash map for quick ID lookup
 }
 
 
@@ -42,18 +43,24 @@ arena: vmem.Arena // Declare the global arena variable
 // Initialize the arena before using it
 init_arena :: proc() {
     BUFFER_SIZE :: 1_000_000 // Initial size of 1 MB
-    vmem.arena_init_growing(&arena, BUFFER_SIZE)
+    success := vmem.arena_init_growing(&arena, BUFFER_SIZE)
+    if success != .None {
+        fmt.println("Error: Failed to initialize arena")
+        return
+    }
 }
 
 // Reset the arena to reuse memory
 reset_arena :: proc() {
-    vmem.arena_reset(&arena)
+    vmem.arena_free_all(&arena)
 }
 
 // Adds a new item to the inventory database.
 // This function checks for duplicate IDs before adding the item.
 // If an item with the same ID already exists, it logs a message and does not add the item.
 // If `db.items` is uninitialized (nil), it initializes the dynamic array with a default capacity.
+// Memory allocation for the name and manufacturer strings is performed using the provided memory arena.
+// The function ensures that the allocated memory is properly aligned and validates its sufficiency before use.
 // Parameters:
 // - db: Pointer to the InventoryDatabase where the item will be added.
 // - id: Unique identifier for the item.
@@ -61,34 +68,55 @@ reset_arena :: proc() {
 // - price: Price of the item.
 // - name: Name of the item.
 // - manufacturer: Manufacturer of the item.
+// - arena: Pointer to the memory arena for allocation.
 // Returns:
 // - true if the item was successfully added to the database.
-// - false if the item could not be added due to validation errors or duplicate ID.
+// - false if the item could not be added due to validation errors, duplicate ID, or memory allocation issues.
 
-add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
+add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, name: string, manufacturer: string, arena: ^vmem.Arena) -> bool {
     // Validate that name and manufacturer are non-empty
     if len(name) == 0 {
         fmt.println("Error: Name cannot be empty.")
-        // No reinitialization of db.items is needed here
         return false
     }
     if len(manufacturer) == 0 {
         fmt.println("Error: Manufacturer cannot be empty.")
         return false
     }
-    // Initialize the dynamic array if it hasn't been initialized
-    if db.items == nil {
-        db.items = make([dynamic]InventoryItem, 0, INITIAL_CAPACITY)[:];
-        }
 
     // Check for duplicate IDs
-    for item in db.items {
-        if item.id == id {
-            fmt.println("Error: Item with ID", id, "and Name", string(item.name.data), "already exists.")
-            return false
-        }
+    if db.items_map == nil {
+        db.items_map = make(map[i32]bool) // Initialize the hash map if not already initialized
     }
+    if db.items_map[id] {
+        fmt.println("Error: Item with ID", id, "already exists.")
+        return false
+    }
+    db.items_map[id] = true // Mark the ID as present in the hash map
 
+    // Allocate memory for the name and manufacturer using the Arena
+    name_data := vmem.arena_alloc(arena, len(name), mem.align_of(u8))
+    if name_data == nil {
+        fmt.println("Error: Failed to allocate memory for name.")
+        return false
+    }
+    if len(name_data) < len(name) {
+        fmt.println("Error: Allocated memory for name is insufficient.")
+        return false
+    }
+    mem.copy(name_data, []u8(name)) // Copy the name string into the allocated memory
+
+    manufacturer_data := vmem.arena_alloc(arena, len(manufacturer), mem.align_of(u8))
+    if manufacturer_data == nil || len(manufacturer_data) < len(manufacturer) {
+        fmt.println("Error: Failed to allocate sufficient memory for manufacturer.")
+        return false
+    }
+    mem.copy(manufacturer_data, []u8(manufacturer)) // Copy the manufacturer string into the allocated memory
+        fmt.println("Error: Failed to allocate memory for manufacturer.")
+        return false
+    }
+    mem.copy(manufacturer_data, []u8(manufacturer)) // Copy the manufacturer string into the allocated memory
+            data = name_data[:len(name)], // Ensure slicing is safe after validation
     // Create a new InventoryItem
     new_item: InventoryItem = InventoryItem{
         id = id,
@@ -96,17 +124,18 @@ add_item :: proc(db: ^InventoryDatabase, id: i32, quantity: i32, price: f32, nam
         price = price,
         name = StringData{
             count = len(name),
-            data = []u8(name),
+            data = name_data[:len(name)],
         },
         manufacturer = StringData{
             count = len(manufacturer),
-            data = manufacturer[:],
+            data = manufacturer_data[:len(manufacturer)],
         },
-    };
+    }
 
-    // Append the new item to the database
-    db.items = append(db.items, new_item); // Append the new item to the dynamic array
-    fmt.println("Item successfully added to database:", new_item.id);
+    fmt.println("Item successfully added to database: ID =", new_item.id, ", Name =", string(new_item.name.data), ", Manufacturer =", string(new_item.manufacturer.data))
+    db.items = append(db.items, new_item)
+    fmt.println("Item successfully added to database:", new_item.id)
+    return true
 }
 
 // Serialize the inventory database into a binary format
@@ -254,13 +283,17 @@ remove_item :: proc(db: ^InventoryDatabase, id: i32) -> bool {
 
 // This procedure tests the functionality of the inventory management system.
 // It validates adding, saving, loading, updating, and removing items from the inventory.
-test_inventory_system :: proc() {
-    db := InventoryDatabase{}
+    // Preallocate capacity for db.items to reduce reallocations
+    expected_item_count := 100 // Adjust this value based on your expected number of items
+    db.items = make([]InventoryItem, 0, expected_item_count)
 
     // Add items
-    add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh")
-    add_item(&db, 2, 5, 299.99, "Sword", "Camelot")
-    add_item(&db, 3, 20, 60.00, "Skateboard", "Birdhouse")
+    add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh", &arena)
+
+    // Add items
+    add_item(&db, 1, 50, 0.99, "Apples", "FarmFresh", &arena)
+    add_item(&db, 2, 5, 299.99, "Sword", "Camelot", &arena)
+    add_item(&db, 3, 20, 60.00, "Skateboard", "Birdhouse", &arena)
 
     // Save to file
     save_inventory("inventory.dat", db)
