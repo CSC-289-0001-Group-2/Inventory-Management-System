@@ -28,6 +28,7 @@ RemoveItem :: proc (itemName: string) {
 }
 */
 
+
 // Method to search for an item in the array
 FindItem :: proc(itemName: string) {
     if sort.find(item_inventory, itemName){
@@ -44,8 +45,8 @@ UpdateAmount :: proc(itemName: string, newAmount: int) {
 }
 
 // Method that adds up the total value of the inventory
-GetTotalValue :: proc() -> float {
-    total: float
+GetTotalValue :: proc() -> f32 {
+    total: f32
     for i := 0; i < item_inventory.len; i+= 1 {
       total += item_inventory[i].price
     }
