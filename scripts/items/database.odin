@@ -121,15 +121,16 @@ search_item_details :: proc(db: ^InventoryDatabase, name: string) {
     }
 }
 
-/*
-// Method that adds up the total value of the inventory
-GetTotalValue :: proc() -> f32 {
-    total: f32
-    for i := 0; i < item_inventory.len; i+= 1 {
-        total += item_inventory[i].price
+
+// Method that calculates and prints the total value of the inventory
+total_value_of_inventory :: proc(db: ^InventoryDatabase) {
+    total: f32 = 0.0
+    for item in db.items {
+        total += cast(f32)(item.quantity) * item.price
     }
+    fmt.println("Total Inventory Value: $", total)
 }
-*/
+
 
 // Serialize the inventory database into a binary format
 serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
