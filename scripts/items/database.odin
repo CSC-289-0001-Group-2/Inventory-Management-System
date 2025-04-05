@@ -112,7 +112,7 @@ remove_item :: proc(db: ^InventoryDatabase, name: string) -> bool {
 }
 
 // Search for an item in the inventory database by its name and print the result
-search_item :: proc(db: ^InventoryDatabase, name: string) {
+search_item_details :: proc(db: ^InventoryDatabase, name: string) {
     item := find_item_by_name(db, name)
     if item != nil {
         fmt.println("Item found: Name =", item.name, "Quantity =", item.quantity, "Price =", item.price, "Manufacturer =", item.manufacturer)
@@ -120,6 +120,16 @@ search_item :: proc(db: ^InventoryDatabase, name: string) {
         fmt.println("Item with name", name, "not found.")
     }
 }
+
+/*
+// Method that adds up the total value of the inventory
+GetTotalValue :: proc() -> f32 {
+    total: f32
+    for i := 0; i < item_inventory.len; i+= 1 {
+        total += item_inventory[i].price
+    }
+}
+*/
 
 // Serialize the inventory database into a binary format
 serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
