@@ -102,8 +102,7 @@ remove_item :: proc(db: ^InventoryDatabase, name: string) -> bool {
     for i in 0..<len(db.items) {
         if &db.items[i] == item {
             log_operation("Removed", db.items[i])
-            db.items[i] = db.items[len(db.items) - 1] // Replace with the last item
-            resize(&db.items, len(db.items) - 1)     // Resize the array
+            ordered_remove(&db.items, i) // Use ordered_remove to remove the item
             return true
         }
     }

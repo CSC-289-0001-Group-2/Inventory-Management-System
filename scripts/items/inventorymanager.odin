@@ -1,10 +1,5 @@
 package items
 
-// Method to remove an item from the array
-RemoveItem :: proc (itemName: string) {
-    ordered_remove(item_inventory, itemName) // not declared anywhere
-}
-
 // Method to search for an item in the array
 FindItem :: proc(itemName: string) {
     if sort.find(item_inventory, itemName){
