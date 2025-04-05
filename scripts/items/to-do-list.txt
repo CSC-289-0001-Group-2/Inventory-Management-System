@@ -1,0 +1,16 @@
+to-do:
+
+update_item_quantity
+two functions:
+sell product
+re-stock
+
+fix update_price
+
+CJ: make GetTotalValue
+
+fix serialize_inventory
+
+fix save_inventory
+
+fix load_inventory
