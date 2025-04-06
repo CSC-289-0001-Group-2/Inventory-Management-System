@@ -21,8 +21,8 @@
 - status: DONE
 
 ### fix serialize_inventory
-- Assigned to: Donovan Ester
-- status: In-progress
+- Assigned to: CJ
+- status: DONE
 
 ### fix save_inventory
 - Assigned to: NONE
