@@ -347,7 +347,7 @@ test_inventory_system :: proc() {
 
     // Check if an item exists before updating its quantity
     if find_item_by_name(&db, "Apples") != nil {
-        update_item_quantity(&db, "Apples", 10)
+       restock_product(&db, "Apples", 10)
     } else {
         fmt.println("Item 'Apples' does not exist.")
     }
