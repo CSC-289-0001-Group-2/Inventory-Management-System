@@ -71,7 +71,7 @@ update_item_quantity :: proc(db: ^InventoryDatabase, name: string, sold_quantity
         return false
     }
     item.quantity -= sold_quantity
-    log_operation("Updated Quantity", ^item)
+    log_operation("Updated Quantity", item^)
     return true
 }
 
@@ -87,7 +87,7 @@ update_item_price :: proc(db: ^InventoryDatabase, name: string, new_price: f32) 
         return false
     }
     item.price = new_price
-    log_operation("Updated Price", ^item)
+    log_operation("Updated Price", item^)
     return true
 }
 
