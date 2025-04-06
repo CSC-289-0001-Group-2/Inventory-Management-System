@@ -111,6 +111,47 @@ remove_item :: proc(db: ^InventoryDatabase, name: string) -> bool {
     return false
 }
 
+sell_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> bool {
+    if quantity <= 0 {
+        fmt.println("Error: You can't sell nothing!")
+        return false
+    }
+
+    item := find_item_by_name(db, name)
+    if item == nil {
+        fmt.println("Error: Item", name, "doesn't exist.")
+        return false
+    }
+
+    if item.quantity < quantity {
+        fmt.println("Error: Not enough stock for the item", name, "to be sold", "- Requested:", quantity, "Available:", item.quantity)
+        return false
+    }
+
+    item.quantity -= quantity
+    log_operation("Sold", ^item)
+    fmt.println("Sold", quantity, "unit(s) of", name, "- Remaining stock:", item.quantity)
+    return true
+}
+
+restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> bool {
+    if quantity <= 0 {
+        fmt.println("Error: Quantity must be > 0.")
+        return false
+    }
+
+    item := find_item_by_name(db, name)
+    if item == nil {
+        fmt.println("Error: Item", name, "doesn't exist.")
+        return false
+    }
+
+    item.quantity += quantity
+    log_operation("Restocked", ^item)
+    fmt.println("Restocked", quantity, "unit(s) of", name, "Previous stock", item.quantity - quantity, "- New stock:", item.quantity)
+    return true
+}
+
 // Search for an item in the inventory database by its name and print the result
 search_item_details :: proc(db: ^InventoryDatabase, name: string) {
     item := find_item_by_name(db, name)
