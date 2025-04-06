@@ -1,33 +1,19 @@
 # to-do:
 
-### update_item_quantity:
+try write to a file
+    hard coded for now
+add some stuff
+remove some stuff
 
-## two functions:
+do all of the functions actually work
 
-### sell product :
-- Assigned to: Kameron
-- status: DONE
 
-### re-stock :
-- Assigned to: Kameron
-- status: DONE
+button
+add items
 
-### fix update_price
-- Assigned to: Robert
-- status: To be selected
 
-### make GetTotalValue
-- Assigned to: CJ
-- status: DONE
+close program
 
-### fix serialize_inventory
-- Assigned to: CJ
-- status: DONE
+open program
 
-### fix save_inventory
-- Assigned to: NONE
-- status: To be selected
-
-### fix load_inventory
-- Assigned to: NONE
-- status: To be selected
+should have populated database

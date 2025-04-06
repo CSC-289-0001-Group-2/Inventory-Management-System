@@ -1,4 +1,4 @@
-package Interface
+package main
 
 // port of micro ui c demo to odin, using rlmu as renderer
 
@@ -7,8 +7,6 @@ import "items"
 import "rlmu"
 import "core:fmt"
 import "core:strings"
-// import "items"
-// import win "core:sys/windows"
 import rl "vendor:raylib"
 import mu "vendor:microui"
 
@@ -32,23 +30,35 @@ main :: proc() { // don't change this function (if possible)
     // new_item := item.new_item("Apple",1.50,30,"Adams Orchards")
     // inventorymanager.AddItem()
     //(name: string, price: f32, amount: int, manufacturer: string)
+
+    // items.test_inventory_system()
+
+    db, success := items.load_inventory("inventory.dat")
+    if !success {
+        fmt.println("Failed to load inventory.")
+        return
+    }
+    fmt.println("Loaded inventory:", db)
+    // fmt.println("Loaded inventory:", db.items[0].name, db.items[0].price, db.items[0].quantity, db.items[0].manufacturer)
+
+    
   
-    rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
-    defer rl.CloseWindow()
+    // rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
+    // defer rl.CloseWindow()
 
-    ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
+    // ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
-    for !rl.WindowShouldClose() {
-        defer free_all(context.temp_allocator)
+    // for !rl.WindowShouldClose() {
+    //     defer free_all(context.temp_allocator)
 
-        rl.BeginDrawing(); defer rl.EndDrawing()
-        rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
+    //     rl.BeginDrawing(); defer rl.EndDrawing()
+    //     rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
         
-        rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
+    //     rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
 
-        button_window(ctx) // next parameter is for database reading
-    } 
+    //     button_window(ctx) // next parameter is for database reading
+    // } 
 }
 
 button_window :: proc(ctx : ^mu.Context){ //, items: [dynamic]Item

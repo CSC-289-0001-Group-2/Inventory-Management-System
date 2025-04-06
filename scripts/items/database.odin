@@ -41,7 +41,7 @@ find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^Item {
 }
 
 // Adds a new item to the inventory database.
-add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
+add_item_by_members :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
     // Check for duplicate names using find_item_by_name
     if find_item_by_name(db, name) != nil {
         fmt.println("Error: Item with name", name, "already exists.")
@@ -63,6 +63,24 @@ add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string
     fmt.println("Item successfully added: Name =", name)
     return true
 }
+
+add_item_by_struct :: proc(db: ^InventoryDatabase, item : Item) -> bool {
+    // Check for duplicate names using find_item_by_name
+    if find_item_by_name(db, item.name) != nil {
+        fmt.println("Error: Item with name", item.name, "already exists.")
+        return false
+    }
+
+    // Create a new Item
+
+    // Append the new item to the items array
+    append(&db.items, item)
+
+    fmt.println("Item successfully added: Name =", item.name)
+    return true
+}
+
+
 
 // Update the price of an item in the inventory
 update_item_price :: proc(db: ^InventoryDatabase, name: string, new_price: f32) -> bool {
@@ -210,9 +228,9 @@ test_inventory_system :: proc() {
     }
 
     // Add items to the inventory
-    add_item(&db, 50, 0.99, "Apples", "FarmFresh")
-    add_item(&db, 5, 299.99, "Sword", "Camelot")
-    add_item(&db, 20, 60.00, "Skateboard", "Birdhouse")
+    add_item_by_members(&db, 50, 0.99, "Apples", "FarmFresh")
+    add_item_by_members(&db, 5, 299.99, "Sword", "Camelot")
+    add_item_by_members(&db, 20, 60.00, "Skateboard", "Birdhouse")
 
     // Save the inventory to a file
     save_inventory("inventory.dat", db)
@@ -243,7 +261,3 @@ test_inventory_system :: proc() {
     save_inventory("inventory_updated.dat", db)
 }
 
-// Main procedure
-main :: proc() {
-    test_inventory_system()
-}

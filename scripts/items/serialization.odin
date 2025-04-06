@@ -21,25 +21,25 @@ Item :: struct {
 
 serialize_inventory :: proc(buf: ^bytes.Buffer, database: InventoryDatabase) {
 	// Serialize the number of items in the array. Use explicit Little Endian encoding.
-	bytes.buffer_write(buf, mem.any_to_bytes(i32le(len(database.items)))) // Write item count as bytes.
+	bytes.buffer_write(buf, mem.any_to_bytes(i64le(len(database.items)))) // Write item count as bytes.
 
 	for item in database.items {
 		// Serialize item ID
-		id := u64le(item.id)
+		id := i32le(item.id)
 		bytes.buffer_write(buf, mem.any_to_bytes(id))
 
 		// Serialize item quantity, performing the u32le cast inline instead of using a temp variable.
-		bytes.buffer_write(buf, mem.any_to_bytes(u32le(item.quantity)))
+		bytes.buffer_write(buf, mem.any_to_bytes(i32le(item.quantity)))
 
 		// Serialize item price
-		bytes.buffer_write(buf, mem.any_to_bytes(u32le(item.price)))
+		bytes.buffer_write(buf, mem.any_to_bytes(f32le(item.price)))
 
 		// Serialize the name
-		bytes.buffer_write(buf, mem.any_to_bytes(u32le(len(item.name))))
+		bytes.buffer_write(buf, mem.any_to_bytes(i64le(len(item.name))))
 		bytes.buffer_write_string(buf, item.name)
 
 		// Serialize the manufacturer
-		bytes.buffer_write(buf, mem.any_to_bytes(u32le(len(item.manufacturer))))
+		bytes.buffer_write(buf, mem.any_to_bytes(i64le(len(item.manufacturer))))
 		bytes.buffer_write_string(buf, item.manufacturer)
 	}
 }
@@ -52,8 +52,10 @@ deserialize_inventory :: proc(data: []u8) -> (database: InventoryDatabase, ok: b
 	data := data
 
 	// Get the number of items in the database
-	num_items: u32
+	num_items: i64
 	deserialize(&data, &num_items) or_return
+
+
 
 	// Reserve the right number of items in the `[dynamic]Item` array, so appends don't have to resize.
 	reserve(&database.items, num_items)
@@ -79,6 +81,12 @@ deserialize_i32 :: proc(data: ^[]u8, val: ^i32) -> (ok: bool) {
 	return true
 }
 
+deserialize_i64 :: proc(data: ^[]u8, val: ^i64) -> (ok: bool) {
+	val^  = endian.get_i64(data^, .Little) or_return
+	data^ = data[8:]
+	return true
+}
+
 deserialize_u32 :: proc(data: ^[]u8, val: ^u32) -> (ok: bool) {
 	val^  = endian.get_u32(data^, .Little) or_return
 	data^ = data[4:]
@@ -95,7 +103,7 @@ deserialize_f32 :: proc(data: ^[]u8, val: ^f32) -> (ok: bool) {
 // Reads a `string` from the data and advances it if ok, returns false otherwise.
 // Clones the string so you can free `data` after you're done serializing.
 deserialize_string :: proc(data: ^[]u8, val: ^string) -> (ok: bool) {
-	str_len: u32
+	str_len: i64
 
 	deserialize(data, &str_len) or_return
 	if len(data) >= int(str_len) {
@@ -107,7 +115,7 @@ deserialize_string :: proc(data: ^[]u8, val: ^string) -> (ok: bool) {
 	}
 }
 
-deserialize :: proc{deserialize_inventory, deserialize_f32, deserialize_u32, deserialize_i32, deserialize_string}
+deserialize :: proc{deserialize_inventory, deserialize_f32, deserialize_u32, deserialize_i32, deserialize_string,deserialize_i64}
 
 // main :: proc() {
 // 	db: InventoryDatabase
