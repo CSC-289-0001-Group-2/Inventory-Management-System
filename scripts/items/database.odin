@@ -7,7 +7,6 @@ import "core:fmt"
 import "core:os"
 import "core:bytes"
 import "core:bufio"
-import "core:io"
 
 // Global Struct Definitions
 
@@ -245,7 +244,7 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
         return false
     }
 
-    bufio.writer_write(&writer, buffer.buf[:])
+    bufio.writer_write(&writer, buffer.buf)
     bufio.writer_flush(&writer)
 
     return true
