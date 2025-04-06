@@ -7,6 +7,7 @@ import "core:fmt"
 import "core:os"
 import "core:bytes"
 import "core:bufio"
+import "core:io"
 
 // Global Struct Definitions
 
@@ -161,39 +162,68 @@ total_value_of_inventory :: proc(db: ^InventoryDatabase) {
 
 
 // Serialize the inventory database into a binary format
-serialize_inventory :: proc(database: InventoryDatabase) -> bytes.Buffer {
-    buffer: bytes.Buffer
-    bytes.buffer_init(&buffer, nil) // Initialize the buffer
-
+serialize_inventory :: proc(database: InventoryDatabase, buffer: ^bytes.Buffer) -> bool {
     // Serialize the number of items in the array
     item_count := i32(len(database.items))
-    bytes.buffer_write(&buffer, []u8{cast(^u8)&item_count, size_of(item_count)}) // Write item count as bytes
+    n, err := bytes.buffer_write_ptr(buffer, cast(rawptr)&item_count, size_of(item_count))
+    if err != .None {
+        fmt.println("Error: Failed to write item count to buffer.")
+        return false
+    }
 
     // Serialize each item in the array
     for i in 0..<len(database.items) {
         item := database.items[i] // Access each item explicitly
 
         // Serialize item ID
-        bytes.buffer_write(&buffer, []u8{cast(^u8)&item.id, size_of(item.id)})
+        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&item.id, size_of(item.id))
+        if err != .None {
+            fmt.println("Error: Failed to write item ID to buffer.")
+            return false
+        }
 
         // Serialize item quantity
-        bytes.buffer_write(&buffer, []u8{cast(^u8)&item.quantity, size_of(item.quantity)})
+        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&item.quantity, size_of(item.quantity))
+        if err != .None {
+            fmt.println("Error: Failed to write item quantity to buffer.")
+            return false
+        }
 
         // Serialize item price
-        bytes.buffer_write(&buffer, []u8{cast(^u8)&item.price, size_of(item.price)})
+        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&item.price, size_of(item.price))
+        if err != .None {
+            fmt.println("Error: Failed to write item price to buffer.")
+            return false
+        }
 
         // Serialize the name
         name_length := u32(len(item.name))
-        bytes.buffer_write(&buffer, []u8{cast(^u8)&name_length, size_of(name_length)}) // Write name length
-        bytes.buffer_write(&buffer, []u8(item.name), name_length)                     // Write name data
+        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&name_length, size_of(name_length))
+        if err != .None {
+            fmt.println("Error: Failed to write name length to buffer.")
+            return false
+        }
+        n, err = bytes.buffer_write(buffer, transmute([]u8)item.name)
+        if err != .None {
+            fmt.println("Error: Failed to write name to buffer.")
+            return false
+        }
 
         // Serialize the manufacturer
         manufacturer_length := u32(len(item.manufacturer))
-        bytes.buffer_write(&buffer, []u8{cast(^u8)&manufacturer_length, size_of(manufacturer_length)}) // Write manufacturer length
-        bytes.buffer_write(&buffer, []u8(item.manufacturer), manufacturer_length)                     // Write manufacturer data
+        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&manufacturer_length, size_of(manufacturer_length))
+        if err != .None {
+            fmt.println("Error: Failed to write manufacturer length to buffer.")
+            return false
+        }
+        n, err = bytes.buffer_write(buffer, transmute([]u8)item.manufacturer)
+        if err != .None {
+            fmt.println("Error: Failed to write manufacturer to buffer.")
+            return false
+        }
     }
 
-    return buffer
+    return true
 }
 
 // Save the inventory database to a file using bufio.Writer
@@ -208,8 +238,14 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
     writer := bufio.Writer{}
     bufio.writer_init(&writer, file)
 
-    buffer := serialize_inventory(database)
-    bufio.writer_write(&writer, buffer.buf)
+    buffer := bytes.Buffer{}
+    bytes.buffer_init(&buffer, nil)
+
+    if !serialize_inventory(database, &buffer) {
+        return false
+    }
+
+    bufio.writer_write(&writer, buffer.buf[:])
     bufio.writer_flush(&writer)
 
     return true
