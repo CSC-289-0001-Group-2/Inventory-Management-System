@@ -13,7 +13,7 @@
 - status: DONE
 
 ### fix update_price
-- Assigned to: NONE
+- Assigned to: Robert
 - status: To be selected
 
 ### make GetTotalValue
