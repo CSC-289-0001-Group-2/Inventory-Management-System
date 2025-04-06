@@ -7,6 +7,7 @@ import "core:fmt"
 import "core:os"
 import "core:bytes"
 import "core:bufio"
+import "core:runtime"
 
 // Global Struct Definitions
 
@@ -227,15 +228,15 @@ serialize_inventory :: proc(database: InventoryDatabase, buffer: ^bytes.Buffer) 
 
 // Save the inventory database to a file using bufio.Writer
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
-    file, success := os.open(file_name, .Write | .Create)
-    if !success {
+    file, success := os.open(file_name, os.O_WRONLY | os.O_CREATE)
+    if success != 0 {
         fmt.println("Error: Failed to create file:", file_name)
         return false
     }
     defer os.close(file)
 
     writer := bufio.Writer{}
-    bufio.writer_init(&writer, file)
+    bufio.writer_init(&writer, os.stream_from_handle(file))
 
     buffer := bytes.Buffer{}
     bytes.buffer_init(&buffer, nil)
@@ -244,7 +245,7 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
         return false
     }
 
-    bufio.writer_write(&writer, buffer.buf)
+    bufio.writer_write(&writer, buffer.buf[:])
     bufio.writer_flush(&writer)
 
     return true
@@ -252,15 +253,16 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
 
 // Load the inventory database from a file using bufio.Reader
 load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
-    file, success := os.open(file_name, .Read)
-    if !success {
+    file, error := os.open(file_name, os.O_RDONLY)
+
+    if error != 0 {
         fmt.println("Error: Failed to open file:", file_name)
         return false, InventoryDatabase{}
     }
     defer os.close(file)
 
     buf_reader := bufio.Reader{}
-    bufio.reader_init(&buf_reader, file)
+    bufio.reader_init(&buf_reader, os.stream_from_handle(file))
 
     buffer := bytes.Buffer{}
     bytes.buffer_init(&buffer, nil)
@@ -275,17 +277,18 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
             fmt.println("Error: Failed to read from file:", file_name)
             return false, InventoryDatabase{}
         }
-        append(&buffer.buf, temp[:n])
+        //append(&buffer.buf, temp[:n])
+        bytes.buffer_write(&buffer, temp[:n])
     }
 
     // Deserialize the buffer directly
     binary_reader := bytes.Reader{}
-    bytes.reader_init(&binary_reader, buffer.buf)
+    bytes.reader_init(&binary_reader, buffer.buf[:])
 
     db: InventoryDatabase
     // Read the number of items in the array
     item_count: u32
-    bytes.reader_read(&binary_reader, ^u8(&item_count), size_of(item_count))
+    bytes.reader_read(&binary_reader, ^u8(&item_count))
     db.items = make([dynamic]InventoryItem, 0)
 
     // Deserialize each item
@@ -293,24 +296,24 @@ load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
         item: InventoryItem
 
         // Deserialize item ID
-        bytes.reader_read(&binary_reader, ^u8(&item.id), size_of(item.id))
+        bytes.reader_read(&binary_reader, ^u8(&item.id))
 
         // Deserialize item quantity
-        bytes.reader_read(&binary_reader, ^u8(&item.quantity), size_of(item.quantity))
+        bytes.reader_read(&binary_reader, ^u8(&item.quantity))
 
         // Deserialize item price
-        bytes.reader_read(&binary_reader, ^u8(&item.price), size_of(item.price))
+        bytes.reader_read(&binary_reader, ^u8(&item.price))
 
         // Deserialize name
         name_length: u32
-        bytes.reader_read(&binary_reader, ^u8(&name_length), size_of(name_length))
+        bytes.reader_read(&binary_reader, ^u8(&name_length))
         name_data := make([]u8, name_length)
         bytes.reader_read(&binary_reader, name_data, name_length)
         item.name = string(name_data)
 
         // Deserialize manufacturer
         manufacturer_length: u32
-        bytes.reader_read(&binary_reader, ^u8(&manufacturer_length), size_of(manufacturer_length))
+        bytes.reader_read(&binary_reader, ^u8(&manufacturer_length))
         manufacturer_data := make([]u8, manufacturer_length)
         bytes.reader_read(&binary_reader, manufacturer_data, manufacturer_length)
         item.manufacturer = string(manufacturer_data)
