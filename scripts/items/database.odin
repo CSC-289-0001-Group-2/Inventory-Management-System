@@ -7,30 +7,31 @@ import "core:fmt"
 import "core:os"
 import "core:bytes"
 import "core:bufio"
-import "core:runtime"
+import "base:runtime"
+import "core:mem"
 
 // Global Struct Definitions
 
 // Struct for in-memory operations
-InventoryItem :: struct {
-    id: i32,
-    quantity: i32,
-    price: f32,
-    name: string,
-    manufacturer: string,
-}
+// Item :: struct {
+//     id: i32,
+//     quantity: i32,
+//     price: f32,
+//     name: string,
+//     manufacturer: string,
+// }
 
-InventoryDatabase :: struct {
-    items: [dynamic]InventoryItem, // Use a dynamic array instead of a slice
-}
+// InventoryDatabase :: struct {
+//     items: [dynamic]Item, // Use a dynamic array instead of a slice
+// }
 
 // Function to log operations
-log_operation :: proc(operation: string, item: InventoryItem) {
+log_operation :: proc(operation: string, item: Item) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
 }
 
 // Find an item in the inventory database by its name
-find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^InventoryItem {
+find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^Item {
     for i in 0..<len(db.items) {
         if db.items[i].name == name {
             return &db.items[i]
@@ -47,8 +48,8 @@ add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string
         return false
     }
 
-    // Create a new InventoryItem
-    new_item := InventoryItem{
+    // Create a new Item
+    new_item := Item{
         id = cast(i32)(len(db.items) + 1), // Assign a unique ID based on the array length
         quantity = quantity,
         price = price,
@@ -161,70 +162,10 @@ total_value_of_inventory :: proc(db: ^InventoryDatabase) {
 }
 
 
-// Serialize the inventory database into a binary format
-serialize_inventory :: proc(database: InventoryDatabase, buffer: ^bytes.Buffer) -> bool {
-    // Serialize the number of items in the array
-    item_count := i32(len(database.items))
-    n, err := bytes.buffer_write_ptr(buffer, cast(rawptr)&item_count, size_of(item_count))
-    if err != .None {
-        fmt.println("Error: Failed to write item count to buffer.")
-        return false
-    }
 
-    // Serialize each item in the array
-    for i in 0..<len(database.items) {
-        item := database.items[i] // Access each item explicitly
 
-        // Serialize item ID
-        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&item.id, size_of(item.id))
-        if err != .None {
-            fmt.println("Error: Failed to write item ID to buffer.")
-            return false
-        }
+// You can add other serialize_* procs here, and then call any of them with just `serialize`
 
-        // Serialize item quantity
-        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&item.quantity, size_of(item.quantity))
-        if err != .None {
-            fmt.println("Error: Failed to write item quantity to buffer.")
-            return false
-        }
-
-        // Serialize item price
-        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&item.price, size_of(item.price))
-        if err != .None {
-            fmt.println("Error: Failed to write item price to buffer.")
-            return false
-        }
-
-        // Serialize the name
-        name_length := u32(len(item.name))
-        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&name_length, size_of(name_length))
-        if err != .None {
-            fmt.println("Error: Failed to write name length to buffer.")
-            return false
-        }
-        n, err = bytes.buffer_write(buffer, transmute([]u8)item.name)
-        if err != .None {
-            fmt.println("Error: Failed to write name to buffer.")
-            return false
-        }
-
-        // Serialize the manufacturer
-        manufacturer_length := u32(len(item.manufacturer))
-        n, err = bytes.buffer_write_ptr(buffer, cast(rawptr)&manufacturer_length, size_of(manufacturer_length))
-        if err != .None {
-            fmt.println("Error: Failed to write manufacturer length to buffer.")
-            return false
-        }
-        n, err = bytes.buffer_write(buffer, transmute([]u8)item.manufacturer)
-        if err != .None {
-            fmt.println("Error: Failed to write manufacturer to buffer.")
-            return false
-        }
-    }
-
-    return true
-}
 
 // Save the inventory database to a file using bufio.Writer
 save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
@@ -241,9 +182,7 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
     buffer := bytes.Buffer{}
     bytes.buffer_init(&buffer, nil)
 
-    if !serialize_inventory(database, &buffer) {
-        return false
-    }
+    serialize_inventory(&buffer,database)
 
     bufio.writer_write(&writer, buffer.buf[:])
     bufio.writer_flush(&writer)
@@ -252,83 +191,22 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
 }
 
 // Load the inventory database from a file using bufio.Reader
-load_inventory :: proc(file_name: string) -> (bool, InventoryDatabase) {
-    file, error := os.open(file_name, os.O_RDONLY)
+load_inventory :: proc(file_name: string) -> (InventoryDatabase,bool) {
+    data, success := os.read_entire_file_from_filename(file_name)
 
-    if error != 0 {
+    if !success {
         fmt.println("Error: Failed to open file:", file_name)
-        return false, InventoryDatabase{}
-    }
-    defer os.close(file)
-
-    buf_reader := bufio.Reader{}
-    bufio.reader_init(&buf_reader, os.stream_from_handle(file))
-
-    buffer := bytes.Buffer{}
-    bytes.buffer_init(&buffer, nil)
-
-    temp := make([]u8, 1024)
-    for {
-        n, err := bufio.reader_read(&buf_reader, temp)
-        if err == .EOF {
-            break
-        }
-        if err != .None {
-            fmt.println("Error: Failed to read from file:", file_name)
-            return false, InventoryDatabase{}
-        }
-        //append(&buffer.buf, temp[:n])
-        bytes.buffer_write(&buffer, temp[:n])
+        return InventoryDatabase{}, false
     }
 
-    // Deserialize the buffer directly
-    binary_reader := bytes.Reader{}
-    bytes.reader_init(&binary_reader, buffer.buf[:])
-
-    db: InventoryDatabase
-    // Read the number of items in the array
-    item_count: u32
-    bytes.reader_read(&binary_reader, ^u8(&item_count))
-    db.items = make([dynamic]InventoryItem, 0)
-
-    // Deserialize each item
-    for _ in 0..<item_count {
-        item: InventoryItem
-
-        // Deserialize item ID
-        bytes.reader_read(&binary_reader, ^u8(&item.id))
-
-        // Deserialize item quantity
-        bytes.reader_read(&binary_reader, ^u8(&item.quantity))
-
-        // Deserialize item price
-        bytes.reader_read(&binary_reader, ^u8(&item.price))
-
-        // Deserialize name
-        name_length: u32
-        bytes.reader_read(&binary_reader, ^u8(&name_length))
-        name_data := make([]u8, name_length)
-        bytes.reader_read(&binary_reader, name_data, name_length)
-        item.name = string(name_data)
-
-        // Deserialize manufacturer
-        manufacturer_length: u32
-        bytes.reader_read(&binary_reader, ^u8(&manufacturer_length))
-        manufacturer_data := make([]u8, manufacturer_length)
-        bytes.reader_read(&binary_reader, manufacturer_data, manufacturer_length)
-        item.manufacturer = string(manufacturer_data)
-
-        append(&db.items, item)
-    }
-
-    return true, db
+    return deserialize_inventory(data)
 }
 
 // Test the inventory management system
 test_inventory_system :: proc() {
     // Create an empty InventoryDatabase
     db: InventoryDatabase = InventoryDatabase{
-        items = make([dynamic]InventoryItem, 0), // Initialize as a dynamic array
+        items = make([dynamic]Item, 0), // Initialize as a dynamic array
     }
 
     // Add items to the inventory
@@ -340,7 +218,7 @@ test_inventory_system :: proc() {
     save_inventory("inventory.dat", db)
 
     // Load the inventory from the file
-    success, loaded_db := load_inventory("inventory.dat")
+    loaded_db,success := load_inventory("inventory.dat")
     if success {
         fmt.println("Loaded Inventory:")
         for item in loaded_db.items {
