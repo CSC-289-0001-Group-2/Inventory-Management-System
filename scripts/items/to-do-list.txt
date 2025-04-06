@@ -2,8 +2,8 @@ to-do:
 
 update_item_quantity
 two functions:
-sell product
-re-stock
+Kameron: sell product
+Kameron: re-stock
 
 fix update_price
 
