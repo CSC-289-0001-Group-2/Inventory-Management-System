@@ -9,6 +9,7 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
+import "core:time"
 
 log_sb := strings.builder_make()
 log_updated := false
@@ -30,16 +31,22 @@ main :: proc() { // don't change this function (if possible)
     // new_item := item.new_item("Apple",1.50,30,"Adams Orchards")
     // inventorymanager.AddItem()
     //(name: string, price: f32, amount: int, manufacturer: string)
-
+    begin_time := time.now()
+    context.allocator = context.temp_allocator
     // items.test_inventory_system()
-
+    
     db, success := items.load_inventory("inventory.dat")
     if !success {
         fmt.println("Failed to load inventory.")
         return
     }
-    fmt.println("Loaded inventory:", db)
-    // fmt.println("Loaded inventory:", db.items[0].name, db.items[0].price, db.items[0].quantity, db.items[0].manufacturer)
+    // fmt.println("Loaded inventory:", db)
+
+    end_time := time.now()
+
+    diff := time.diff(begin_time, end_time)
+    fmt.println("Time taken:", time.duration_milliseconds(diff), "ms")
+
 
     
   
