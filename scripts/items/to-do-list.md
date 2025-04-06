@@ -18,7 +18,7 @@
 
 ### make GetTotalValue
 - Assigned to: CJ
-- status: In-Progress
+- status: DONE
 
 ### fix serialize_inventory
 - Assigned to: Donovan Ester
