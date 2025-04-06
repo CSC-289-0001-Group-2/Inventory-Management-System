@@ -62,19 +62,6 @@ add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string
     return true
 }
 
-// also add for item to increase (re-stock)
-// Update the quantity of an item in the inventory
-update_item_quantity :: proc(db: ^InventoryDatabase, name: string, sold_quantity: i32) -> bool {
-    item := find_item_by_name(db, name)
-    if item == nil {
-        fmt.println("Error: Item with name", name, "not found.")
-        return false
-    }
-    item.quantity -= sold_quantity
-    log_operation("Updated Quantity", item^)
-    return true
-}
-
 // Update the price of an item in the inventory
 update_item_price :: proc(db: ^InventoryDatabase, name: string, new_price: f32) -> bool {
     if new_price < 0 {
