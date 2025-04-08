@@ -7,12 +7,12 @@
 - contributors: CJ, Ethan
 
 ### make log window position/ scale properly to bottom left of screen
-- status: In-progress
+- status: DONE
 - contributors: Kameron
 
 ### make item edit window
 - status: ASSIGNED
-- contributors: Robert, Donovan
+- contributors: Robert, Donovan, Kameron
 
 ## priority 2:
 

@@ -39,7 +39,7 @@ main :: proc() {
             items = make([dynamic]items.Item, 100000000), // Initialize as a dynamic array
         }  
     }
-
+    rl.SetWindowState({ .WINDOW_RESIZABLE })
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
 
