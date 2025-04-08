@@ -11,6 +11,7 @@ run_all_tests :: proc() {
     db_test := testing.T{}
     test_find_item_by_name(&db_test)
     test_search_item_details(&db_test)
+    test_search_items_by_manufacturer(&db_test)
     test_save_inventory(&db_test)
     test_load_inventory(&db_test)
     test_remove_item(&db_test)
