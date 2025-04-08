@@ -116,29 +116,3 @@ deserialize_string :: proc(data: ^[]u8, val: ^string) -> (ok: bool) {
 }
 
 deserialize :: proc{deserialize_inventory, deserialize_f32, deserialize_u32, deserialize_i32, deserialize_string,deserialize_i64}
-
-// main :: proc() {
-// 	db: InventoryDatabase
-// 	append(&db.items, Item{13, 42, 1999, "Book of Odin", "Karl Zylinski"})
-// 	fmt.println(db) // InventoryDatabase{items = [Item{id = 13, quantity = 42, price = 1999, name = "Book of Odin", manufacturer = "Karl Zylinski"}]}
-
-// 	// Set up buffer to serialize the database to.
-// 	// No need to call `buffer_init` unless you want to prep it with existing content,
-// 	// or unless you want to use a specific allocator for its dynamic array.
-// 	// Without explicit initialization, it'll allocate on the `context.allocator` the first time you write something to it.
-// 	buf: bytes.Buffer
-// 	defer bytes.buffer_destroy(&buf)
-
-// 	// Serialize inventory
-// 	serialize(&buf, db)
-// 	// You could serialize something before and/or after this, adding them to the same byte buffer.
-// 	// That's why I made `serialize_inventory` take a `Buffer` as an input.
-
-// 	// Write serialized data to disk with `os.write_entire_file`, or print it.
-// 	data_to_write := bytes.buffer_to_bytes(&buf)
-// 	fmt.println(data_to_write)
-
-// 	// Deserialize
-// 	db2, ok := deserialize(data_to_write)
-// 	fmt.println(db2, ok) // InventoryDatabase{items = [Item{id = 13, quantity = 42, price = 1999, name = "Book of Odin", manufacturer = "Karl Zylinski"}]}
-// }
