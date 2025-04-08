@@ -53,7 +53,6 @@ main :: proc() {
         
         rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
-
         button_window(ctx,db) // next parameter is for database reading
     } 
 }
