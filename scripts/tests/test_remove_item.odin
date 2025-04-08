@@ -1,4 +1,4 @@
-package items
+package tests
 
 import "core:fmt"
 import "core:testing"

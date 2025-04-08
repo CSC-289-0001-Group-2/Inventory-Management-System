@@ -9,7 +9,7 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
-import "core:time"
+
 
 log_sb := strings.builder_make()
 log_updated := false
