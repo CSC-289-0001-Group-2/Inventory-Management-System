@@ -39,24 +39,22 @@ main :: proc() {
             items = make([dynamic]items.Item, 100000000), // Initialize as a dynamic array
         }  
     }
+    rl.SetWindowState({ .WINDOW_RESIZABLE })
+    rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
+    defer rl.CloseWindow()
 
+    ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
-    // rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
-    // defer rl.CloseWindow()
+    for !rl.WindowShouldClose() {
+        defer free_all(context.temp_allocator)
 
-    // ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
-
-    // for !rl.WindowShouldClose() {
-    //     defer free_all(context.temp_allocator)
-
-    //     rl.BeginDrawing(); defer rl.EndDrawing()
-    //     rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
+        rl.BeginDrawing(); defer rl.EndDrawing()
+        rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
         
-    //     rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
+        rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
-
-    //     button_window(ctx,db) // next parameter is for database reading
-    // } 
+        button_window(ctx,db) // next parameter is for database reading
+    } 
 }
 
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
