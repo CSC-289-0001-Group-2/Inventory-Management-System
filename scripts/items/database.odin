@@ -11,6 +11,7 @@ import "base:runtime"
 import "core:mem"
 import "core:strings"
 import "core:time"
+import "core:testing"
 
 // Global Struct Definitions
 
@@ -240,55 +241,16 @@ load_inventory :: proc(file_name: string) -> (InventoryDatabase, bool) {
 
 // Test the inventory management system
 test_inventory_system :: proc() {
-    // Create an empty InventoryDatabase
-
-    db: InventoryDatabase = InventoryDatabase{
-        items = make([dynamic]Item, 10000000), // Initialize as a dynamic array
-    }
-
-    // Add items to the inventory
-    
-    // add_item_by_members(&db, 5, 299.99, "Sword", "Camelot")
-    // add_item_by_members(&db, 20, 60.00, "Skateboard", "Birdhouse")
-    for i : i32 = 0; i < 10000000; i += 1 {
-        my_builder:= strings.builder_make()
-        strings.write_int(&my_builder,int(i))
-        i_to_string := strings.to_string(my_builder)
-        add_item_by_members(&db, i, f32(i), i_to_string, i_to_string)
-    }
-
-    // Save the inventory to a file
-    begin_time := time.now()
-    save_inventory("inventory.dat", db)
-    end_time := time.now()
-
-    diff := time.diff(begin_time, end_time)
-    fmt.println("Time taken:", time.duration_milliseconds(diff), "ms")
-
-    // Load the inventory from the file
-    // loaded_db,success := load_inventory("inventory.dat")
-    // if success {
-    //     fmt.println("Loaded Inventory:")
-    //     for item in loaded_db.items {
-    //         fmt.println("Name:", item.name, "Quantity:", item.quantity, "Price:", item.price, "Manufacturer:", item.manufacturer)
-    //     }
-    // }
-
-    // // Check if an item exists before updating its quantity
-    // if find_item_by_name(&db, "Apples") != nil {
-    //    restock_product(&db, "Apples", 10)
-    // } else {
-    //     fmt.println("Item 'Apples' does not exist.")
-    // }
-
-    // // Update the price of an item
-    // update_item_price(&db, "Sword", 249.99)
-
-    // // Remove an item from the inventory
-    // remove_item(&db, "Skateboard")
-
-    // // Save the updated inventory to a new file
-    // save_inventory("inventory_updated.dat", db)
+    db_test := testing.T{}
+    test_find_item_by_name(&db_test)
+    test_search_item_details(&db_test)
+    test_save_inventory(&db_test)
+    test_load_inventory(&db_test)
+    test_remove_item(&db_test)
+    test_sell_product(&db_test)
+    test_restock_product(&db_test)
+    test_update_item_price(&db_test)
+    test_total_value_of_inventory(&db_test)
 
 }
 

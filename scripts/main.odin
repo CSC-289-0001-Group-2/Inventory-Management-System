@@ -27,25 +27,8 @@ window_right_button_divider : i32 = 5
 
 bg : [3]u8 = { 90, 95, 100 }
 
-main :: proc() { // don't change this function (if possible)
-    // new_item := item.new_item("Apple",1.50,30,"Adams Orchards")
-    // inventorymanager.AddItem()
-    //(name: string, price: f32, amount: int, manufacturer: string)
-    begin_time := time.now()
-    context.allocator = context.temp_allocator
-    // items.test_inventory_system()
-    
-    db, success := items.load_inventory("inventory.dat")
-    if !success {
-        fmt.println("Failed to load inventory.")
-        return
-    }
-    // fmt.println("Loaded inventory:", db)
-
-    end_time := time.now()
-
-    diff := time.diff(begin_time, end_time)
-    fmt.println("Time taken:", time.duration_milliseconds(diff), "ms")
+main :: proc() {
+    items.test_inventory_system()
 
 
     
