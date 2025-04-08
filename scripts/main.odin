@@ -30,30 +30,28 @@ bg : [3]u8 = { 90, 95, 100 }
 main :: proc() {
     items.test_inventory_system()
 
+    rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
+    defer rl.CloseWindow()
 
-    
-  
-    // rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
-    // defer rl.CloseWindow()
+    ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
-    // ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
+    for !rl.WindowShouldClose() {
+        defer free_all(context.temp_allocator)
 
-    // for !rl.WindowShouldClose() {
-    //     defer free_all(context.temp_allocator)
-
-    //     rl.BeginDrawing(); defer rl.EndDrawing()
-    //     rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
+        rl.BeginDrawing(); defer rl.EndDrawing()
+        rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
         
-    //     rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
+        rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
 
-    //     button_window(ctx) // next parameter is for database reading
-    // } 
+        button_window(ctx,db) // next parameter is for database reading
+    } 
 }
 
-button_window :: proc(ctx : ^mu.Context){ //, items: [dynamic]Item
+button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
     if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED}) {
-        // for item in items{
+        // for i in 0..<len(db.items) {
+            
             defer mu.end_window(ctx)
             button_width: i32 = i32(screen_width/2)
             button_num: i32 =20
