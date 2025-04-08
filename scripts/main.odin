@@ -47,6 +47,8 @@ main :: proc() {
 
 
         button_window(ctx,db) // next parameter is for database reading
+
+        log_window(ctx)
     } 
 }
 
@@ -71,7 +73,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
             strings.write_string(&my_builder,price)
             label:= strings.to_string(my_builder)
     
-            mu.button(ctx, label)
+            if .SUBMIT in mu.button(ctx, label) do write_log("Item Successfully Added!")
         // }
         // mu.begin_panel(ctx, "Inventory List")
         // mu.end_panel(ctx)
@@ -79,7 +81,23 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
 
 }
 
+log_window :: proc (ctx : ^mu.Context) {
+    if mu.begin_window(ctx, "Log Window", mu.Rect{ 350, 40, 300, 200 }) {
+        defer mu.end_window(ctx)
 
+        /* output text panel */
+        mu.layout_row(ctx, { -1 }, -25)
+        mu.begin_panel(ctx, "Log Output")
+        panel := mu.get_current_container(ctx)
+        mu.layout_row(ctx, { -1 }, -1)
+        mu.text(ctx, strings.to_string(log_sb))
+        mu.end_panel(ctx)
+        if log_updated {
+            panel.scroll.y = panel.content_size.y
+            log_updated = false
+        }
+    }
+}
 
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
