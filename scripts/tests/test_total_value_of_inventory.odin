@@ -1,4 +1,4 @@
-package items
+package tests
 
 import "core:fmt"
 import "core:testing"
@@ -22,9 +22,14 @@ test_total_value_of_inventory :: proc(t: ^testing.T) {
 
     // Call the function and capture the output
     output := items.total_value_of_inventory(&db)
+    new_builder := strings.Builder{}
+    strings.builder_init(&new_builder, context.allocator)
+    strings.write_string(&new_builder,"Total Inventory Value: $")
+    fmt.sbprintf(&new_builder, "%.2f", expected_total)
+    string_output := strings.to_string(new_builder)
 
     // Verify the output contains the expected total value
-    testing.expect(t, ok=strings.contains(output, fmt.sbprintf(nil, "Total Inventory Value: $%.2f", expected_total)))
+    testing.expect(t, ok=strings.contains(output, string_output))
 
     fmt.println("All tests for total_value_of_inventory passed.")
 }

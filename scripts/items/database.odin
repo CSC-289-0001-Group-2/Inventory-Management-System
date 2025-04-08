@@ -166,11 +166,17 @@ search_item_details :: proc(db: ^InventoryDatabase, name: string) -> string {
 
 // Method that calculates and prints the total value of the inventory
 total_value_of_inventory :: proc(db: ^InventoryDatabase) -> string {
+    new_builder := strings.Builder{}
+    strings.builder_init(&new_builder, context.allocator) // Initialize the builder with the default allocator
     total: f32 = 0.0
     for item in db.items {
+        // fmt.print("Item: ", item.name, " Total price: ", cast(f32)(item.quantity) * item.price, "\n")
         total += cast(f32)(item.quantity) * item.price
     }
-    return fmt.sbprintf(nil, "Total Inventory Value: $%.2f", total)
+    strings.write_string(&new_builder,"Total Inventory Value: $")
+    fmt.sbprintf(&new_builder, "%.2f", total)
+    
+    return strings.to_string(new_builder) // Convert the builder's contents to a string
 }
 
 
@@ -218,4 +224,17 @@ load_inventory :: proc(file_name: string) -> (InventoryDatabase, bool) {
     }
 
     return deserialize_inventory(data)
+}
+
+// Search for all items in the inventory database by manufacturer
+search_items_by_manufacturer :: proc(db: ^InventoryDatabase, manufacturer: string) -> []Item {
+    results := make([dynamic]Item, 0) // Initialize an empty dynamic array to store matching items
+
+    for item in db.items {
+        if item.manufacturer == manufacturer {
+            append(&results, item) // Add the matching item to the results array
+        }
+    }
+
+    return results[:] // Convert the dynamic array to a slice and return it
 }
