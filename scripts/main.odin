@@ -28,8 +28,10 @@ window_right_button_divider : i32 = 5
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
-    items.test_inventory_system()
-
+    
+    db := items.InventoryDatabase{
+        items = make([dynamic]items.Item, 10000000000), // Initialize as a dynamic array
+    }
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
 
