@@ -3,27 +3,28 @@ package items
 import "core:fmt"
 import "core:testing"
 import "core:os"
+import "../items" // Adjust the path to the `items` package
 
 // Test the load_inventory function
 test_load_inventory :: proc(t: ^testing.T) {
     // Create a mock InventoryDatabase
-    db: InventoryDatabase = InventoryDatabase{
-        items = make([dynamic]Item, 0), // Initialize as a dynamic array
+    db: items.InventoryDatabase = items.InventoryDatabase{
+        items = make([dynamic]items.Item, 0), // Initialize as a dynamic array
     }
 
     // Add test items to the database
-    add_item_by_members(&db, 10, 5.99, "Apple", "FruitCo")
-    add_item_by_members(&db, 20, 15.49, "Banana", "TropicalFarms")
+    items.add_item_by_members(&db, 10, 5.99, "Apple", "FruitCo")
+    items.add_item_by_members(&db, 20, 15.49, "Banana", "TropicalFarms")
 
     // Define the file name for saving and loading the inventory
     file_name := "test_inventory.dat"
 
     // Save the inventory to a file
-    save_success := save_inventory(file_name, db)
+    save_success := items.save_inventory(file_name, db)
     testing.expect(t=t, ok=save_success)
 
     // Load the inventory from the file
-    loaded_db, load_success := load_inventory(file_name)
+    loaded_db, load_success := items.load_inventory(file_name)
     testing.expect(t=t, ok=load_success)
 
     // Verify the loaded inventory matches the original database
