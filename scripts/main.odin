@@ -33,7 +33,7 @@ main :: proc() {
     if !success {
         fmt.println("Error loading inventory from file:", file_name)
         db := items.InventoryDatabase{
-            items = make([dynamic]items.Item, 10000000000), // Initialize as a dynamic array
+            items = make([dynamic]items.Item, 100000000), // Initialize as a dynamic array
         }  
     }
 
