@@ -1,19 +1,10 @@
 # to-do:
 
-try write to a file
-    hard coded for now
-add some stuff
-remove some stuff
+micro ui
+-button
+--add items
 
-do all of the functions actually work
-
-
-button
-add items
-
-
-close program
-
-open program
-
-should have populated database
+micro ui
+-close program
+--open program
+--should have populated database
