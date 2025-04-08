@@ -63,7 +63,13 @@ main :: proc() {
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
     if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED}) {
         // for i in 0..<len(db.items) {
-            
+
+            win := mu.get_current_container(ctx)
+            win.rect.w = max(win.rect.w, 0)
+            win.rect.w = min(win.rect.w, 0)
+            win.rect.h = max(win.rect.h, 0)
+            win.rect.h = min(win.rect.h, 0)
+                
             defer mu.end_window(ctx)
             button_width: i32 = i32(screen_width/2)
             button_num: i32 =20
@@ -90,8 +96,14 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
 }
 
 log_window :: proc (ctx : ^mu.Context) {
-    if mu.begin_window(ctx, "Log Window", mu.Rect{ 350, 40, 300, 200 }) {
+    if mu.begin_window(ctx, "Log Window", mu.Rect{ 0, screen_height/2, screen_width/2, screen_height/2 }) {
         defer mu.end_window(ctx)
+
+        win := mu.get_current_container(ctx)
+        win.rect.w = max(win.rect.w, 0)
+        win.rect.w = min(win.rect.w, 0)
+        win.rect.h = max(win.rect.h, 0)
+        win.rect.h = min(win.rect.h, 0)
 
         /* output text panel */
         mu.layout_row(ctx, { -1 }, -25)
