@@ -7,7 +7,7 @@ import "core:time"
 
 run_all_tests :: proc() {
     start_time := time.now()
-    fmt.println("Running tests at:", time.clock_from_time(start_time))
+    fmt.println("\nRunning tests at:", time.clock_from_time(start_time),"\n")
     db_test := testing.T{}
     test_find_item_by_name(&db_test)
     test_search_item_details(&db_test)
@@ -20,5 +20,5 @@ run_all_tests :: proc() {
     test_total_value_of_inventory(&db_test)
     finish_time := time.now()
     duration := time.diff(start_time, finish_time)
-    fmt.println("\nAll tests completed at:", time.clock_from_time(start_time)," Total Duration:",time.duration_milliseconds(duration))
+    fmt.println("\nAll tests completed at:", time.clock_from_time(start_time),"\nTotal Duration:",time.duration_milliseconds(duration))
 }
