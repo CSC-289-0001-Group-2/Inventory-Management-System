@@ -4,23 +4,24 @@ import "core:fmt"
 import "core:testing"
 import "core:os"
 import "core:bytes"
+import "../items" // Adjust the path to the `items` package
 
 // Test the save_inventory function
 test_save_inventory :: proc(t: ^testing.T) {
     // Create a mock InventoryDatabase
-    db: InventoryDatabase = InventoryDatabase{
-        items = make([dynamic]Item, 0), // Initialize as a dynamic array
+    db: items.InventoryDatabase = items.InventoryDatabase{
+        items = make([dynamic]items.Item, 0), // Initialize as a dynamic array
     }
 
     // Add test items to the database
-    add_item_by_members(&db, 10, 5.99, "Apple", "FruitCo")
-    add_item_by_members(&db, 20, 15.49, "Banana", "TropicalFarms")
+    items.add_item_by_members(&db, 10, 5.99, "Apple", "FruitCo")
+    items.add_item_by_members(&db, 20, 15.49, "Banana", "TropicalFarms")
 
     // Define the file name for saving the inventory
     file_name := "test_inventory.dat"
 
     // Call the save_inventory function
-    success := save_inventory(file_name, db)
+    success := items.save_inventory(file_name, db)
     testing.expect(t=t, ok=success)
 
     // Verify that the file was created
@@ -33,7 +34,7 @@ test_save_inventory :: proc(t: ^testing.T) {
     testing.expect(t=t, ok=read_success)
 
     // Deserialize the data and verify the contents
-    loaded_db, deserialize_success := deserialize_inventory(data)
+    loaded_db, deserialize_success := items.deserialize_inventory(data)
     testing.expect(t=t, ok=deserialize_success)
     testing.expect(t=t, ok=len(loaded_db.items) == len(db.items))
 
