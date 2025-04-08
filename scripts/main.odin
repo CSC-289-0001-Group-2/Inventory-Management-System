@@ -27,38 +27,9 @@ window_right_button_divider : i32 = 5
 
 bg : [3]u8 = { 90, 95, 100 }
 
-main :: proc() { // don't change this function (if possible)
+main :: proc() {
+    items.test_inventory_system()
 
-    //(name: string, price: f32, amount: int, manufacturer: string)
-    // begin_time := time.now()
-    // context.allocator = context.temp_allocator
-    // // items.test_inventory_system()
-    
-    db, success := items.load_inventory("inventory.dat")
-    if !success {
-        fmt.println("Failed to load inventory.")
-        db = items.InventoryDatabase{
-            items = make([dynamic]items.Item, 10000000), // Initialize as a dynamic array
-        }
-    }
-    // Item :: struct {
-    //     id: i32,
-    //     quantity: i32,
-    //     price: f32,
-    //     name: string,
-    //     manufacturer: string,
-    // }
-    new_item := items.Item{1,30,1.50,"Apple","Adams Orchards"}
-    items.add_item_by_struct(&db, new_item)
-
-    // end_time := time.now()
-
-    // diff := time.diff(begin_time, end_time)
-    // fmt.println("Time taken:", time.duration_milliseconds(diff), "ms")
-
-
-    
-  
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
 
