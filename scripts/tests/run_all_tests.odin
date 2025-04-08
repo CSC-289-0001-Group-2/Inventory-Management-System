@@ -6,7 +6,7 @@ import "../items"
 import "core:time"
 
 
-test_inventory_system :: proc() {
+run_all_tests :: proc() {
     db_test := testing.T{}
     test_find_item_by_name(&db_test)
     test_search_item_details(&db_test)

@@ -3,6 +3,7 @@ package main
 // port of micro ui c demo to odin, using rlmu as renderer
 
 import "items"
+import "tests"
 
 import "rlmu"
 import "core:fmt"
@@ -28,7 +29,14 @@ window_right_button_divider : i32 = 5
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
-    items.test_inventory_system()
+    db,success := items.load_inventory("inventory.txt")
+    if !success {
+        fmt.println("Failed to load inventory.")
+        db = items.InventoryDatabase{
+            items = make([dynamic]items.Item, 10000000), // Initialize as a dynamic array
+        }
+    }
+    tests.run_all_tests()
 
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
