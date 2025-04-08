@@ -216,11 +216,22 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
 }
 
 // Load the inventory database from a file using bufio.Reader
-load_inventory :: proc(file_name: string) -> (InventoryDatabase,bool) {
+load_inventory :: proc(file_name: string) -> (InventoryDatabase, bool) {
     data, success := os.read_entire_file_from_filename(file_name)
 
+    // Check if the file could not be opened or read
+    // If the operation fails, print an error message and return an empty database with a failure status.
     if !success {
+        // The file could not be opened or read. This might happen if:
+        // - The file does not exist.
+        // - The program does not have the necessary permissions to access the file.
+        // - There is an issue with the file system (e.g., the file is locked or corrupted).
         fmt.println("Error: Failed to open file:", file_name)
+        return InventoryDatabase{}, false
+    }
+    
+    if len(data) == 0 {
+        fmt.println("Error: File is empty:", file_name)
         return InventoryDatabase{}, false
     }
 
