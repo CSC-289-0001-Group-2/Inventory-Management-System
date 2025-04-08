@@ -90,7 +90,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
 }
 
 log_window :: proc (ctx : ^mu.Context) {
-    if mu.begin_window(ctx, "Log Window", mu.Rect{ 350, 40, 300, 200 }) {
+    if mu.begin_window(ctx, "Log Window", mu.Rect{ 0, screen_height/2, screen_width/2, screen_height/2 }) {
         defer mu.end_window(ctx)
 
         /* output text panel */
