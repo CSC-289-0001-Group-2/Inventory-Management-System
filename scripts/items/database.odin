@@ -179,14 +179,13 @@ search_item_details :: proc(db: ^InventoryDatabase, name: string) -> string {
 
 
 // Method that calculates and prints the total value of the inventory
-total_value_of_inventory :: proc(db: ^InventoryDatabase) {
+total_value_of_inventory :: proc(db: ^InventoryDatabase) -> string {
     total: f32 = 0.0
     for item in db.items {
         total += cast(f32)(item.quantity) * item.price
     }
-    fmt.println("Total Inventory Value: $", total)
+    return fmt.sbprintf(nil, "Total Inventory Value: $%.2f", total)
 }
-
 
 
 

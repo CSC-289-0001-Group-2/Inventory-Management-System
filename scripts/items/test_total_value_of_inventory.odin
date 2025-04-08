@@ -19,19 +19,11 @@ test_total_value_of_inventory :: proc(t: ^testing.T) {
     // Expected total value
     expected_total := 59.90 + 309.80 + 17.45
 
-    // Redirect output to a strings.Builder
-    output_builder := strings.Builder{}
-    strings.builder_init(&output_builder, context.allocator)
-    fmt.set_output_stream(strings.stream_from_builder(&output_builder))
-
-    // Call the function
-    total_value_of_inventory(&db)
-
-    // Capture the output
-    output := strings.to_string(&output_builder)
+    // Call the function and capture the output
+    output := total_value_of_inventory(&db)
 
     // Verify the output contains the expected total value
-    testing.expect(t, ok=strings.contains(output, fmt.sprintf("Total Inventory Value: $%.2f", expected_total)))
+    testing.expect(t, ok=strings.contains(output, fmt.sbprintf(nil, "Total Inventory Value: $%.2f", expected_total)))
 
     fmt.println("All tests for total_value_of_inventory passed.")
 }
