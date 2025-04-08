@@ -15,19 +15,6 @@ import "core:testing"
 
 // Global Struct Definitions
 
-// Struct for in-memory operations
-// Item :: struct {
-//     id: i32,
-//     quantity: i32,
-//     price: f32,
-//     name: string,
-//     manufacturer: string,
-// }
-
-// InventoryDatabase :: struct {
-//     items: [dynamic]Item, // Use a dynamic array instead of a slice
-// }
-
 // Function to log operations
 log_operation :: proc(operation: string, item: Item) {
     fmt.println("[LOG]", operation, "Item ID:", item.id)
@@ -46,10 +33,10 @@ find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^Item {
 // Adds a new item to the inventory database.
 add_item_by_members :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
     // Check for duplicate names using find_item_by_name
-    // if find_item_by_name(db, name) != nil {
-    //     fmt.println("Error: Item with name", name, "already exists.")
-    //     return false
-    // }
+    if find_item_by_name(db, name) != nil {
+        fmt.println("Error: Item with name", name, "already exists.")
+        return false
+    }
 
     // Create a new Item
     new_item := Item{
@@ -73,8 +60,6 @@ add_item_by_struct :: proc(db: ^InventoryDatabase, item : Item) -> bool {
         fmt.println("Error: Item with name", item.name, "already exists.")
         return false
     }
-
-    // Create a new Item
 
     // Append the new item to the items array
     append(&db.items, item)
@@ -187,10 +172,6 @@ total_value_of_inventory :: proc(db: ^InventoryDatabase) -> string {
     }
     return fmt.sbprintf(nil, "Total Inventory Value: $%.2f", total)
 }
-
-
-
-// You can add other serialize_* procs here, and then call any of them with just `serialize`
 
 
 // Save the inventory database to a file using bufio.Writer
