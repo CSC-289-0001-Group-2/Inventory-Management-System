@@ -219,3 +219,16 @@ load_inventory :: proc(file_name: string) -> (InventoryDatabase, bool) {
 
     return deserialize_inventory(data)
 }
+
+// Search for all items in the inventory database by manufacturer
+search_items_by_manufacturer :: proc(db: ^InventoryDatabase, manufacturer: string) -> []Item {
+    results := make([dynamic]Item, 0) // Initialize an empty dynamic array to store matching items
+
+    for item in db.items {
+        if item.manufacturer == manufacturer {
+            append(&results, item) // Add the matching item to the results array
+        }
+    }
+
+    return results[:] // Convert the dynamic array to a slice and return it
+}
