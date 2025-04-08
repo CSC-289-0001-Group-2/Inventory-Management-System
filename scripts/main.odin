@@ -29,31 +29,31 @@ window_right_button_divider : i32 = 5
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
-    db,success := items.load_inventory("inventory.txt")
-    if !success {
-        fmt.println("Failed to load inventory.")
-        db = items.InventoryDatabase{
-            items = make([dynamic]items.Item, 10000000), // Initialize as a dynamic array
-        }
-    }
+    // db,success := items.load_inventory("inventory.txt")
+    // if !success {
+    //     fmt.println("Failed to load inventory.")
+    //     db = items.InventoryDatabase{
+    //         items = make([dynamic]items.Item, 10000000), // Initialize as a dynamic array
+    //     }
+    // }
     tests.run_all_tests()
 
-    rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
-    defer rl.CloseWindow()
+    // rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
+    // defer rl.CloseWindow()
 
-    ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
+    // ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
-    for !rl.WindowShouldClose() {
-        defer free_all(context.temp_allocator)
+    // for !rl.WindowShouldClose() {
+    //     defer free_all(context.temp_allocator)
 
-        rl.BeginDrawing(); defer rl.EndDrawing()
-        rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
+    //     rl.BeginDrawing(); defer rl.EndDrawing()
+    //     rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
         
-        rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
+    //     rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
 
-        button_window(ctx,db) // next parameter is for database reading
-    } 
+    //     button_window(ctx,db) // next parameter is for database reading
+    // } 
 }
 
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
