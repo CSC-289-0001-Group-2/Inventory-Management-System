@@ -13,6 +13,7 @@ import "core:time"
 
 log_sb := strings.builder_make()
 log_updated := false
+file_name:= "inventory.dat"
 
 log_input_text := make_slice([]u8, 128)
 log_input_text_len : int
@@ -28,10 +29,14 @@ window_right_button_divider : i32 = 5
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
-    
-    db := items.InventoryDatabase{
-        items = make([dynamic]items.Item, 10000000000), // Initialize as a dynamic array
+    db, success := items.load_inventory(file_name)
+    if !success {
+        fmt.println("Error loading inventory from file:", file_name)
+        db := items.InventoryDatabase{
+            items = make([dynamic]items.Item, 10000000000), // Initialize as a dynamic array
+        }  
     }
+
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
 
