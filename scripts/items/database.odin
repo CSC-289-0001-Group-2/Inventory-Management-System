@@ -162,13 +162,19 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
 }
 
 // Search for an item in the inventory database by its name and print the result
-search_item_details :: proc(db: ^InventoryDatabase, name: string) {
+search_item_details :: proc(db: ^InventoryDatabase, name: string) -> string {
+    builder := strings.Builder{}
+    strings.builder_init(&builder, context.allocator) // Initialize the builder with the default allocator
+
     item := find_item_by_name(db, name)
     if item != nil {
-        fmt.println("Item found: Name =", item.name, "Quantity =", item.quantity, "Price =", item.price, "Manufacturer =", item.manufacturer)
+        fmt.sbprintf(&builder, "Item found: Name = %s, Quantity = %d, Price = %.2f, Manufacturer = %s",
+            item.name, item.quantity, item.price, item.manufacturer)
     } else {
-        fmt.println("Item with name", name, "not found.")
+        fmt.sbprintf(&builder, "Item with name %s not found.", name)
     }
+
+    return strings.to_string(builder) // Convert the builder's contents to a string
 }
 
 
