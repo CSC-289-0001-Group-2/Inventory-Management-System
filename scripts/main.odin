@@ -50,13 +50,21 @@ main :: proc() {
         rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
         button_window(ctx,db) // next parameter is for database reading
+
+        log_window(ctx)
     } 
 }
 
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
     if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED}) {
         // for i in 0..<len(db.items) {
-            
+
+            win := mu.get_current_container(ctx)
+            win.rect.w = max(win.rect.w, 0)
+            win.rect.w = min(win.rect.w, 0)
+            win.rect.h = max(win.rect.h, 0)
+            win.rect.h = min(win.rect.h, 0)
+                
             defer mu.end_window(ctx)
             button_width: i32 = i32(screen_width/2)
             button_num: i32 =20
@@ -74,7 +82,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
             strings.write_string(&my_builder,price)
             label:= strings.to_string(my_builder)
     
-            mu.button(ctx, label)
+            if .SUBMIT in mu.button(ctx, label) do write_log("Item Successfully Added!")
         // }
         // mu.begin_panel(ctx, "Inventory List")
         // mu.end_panel(ctx)
@@ -82,7 +90,29 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
 
 }
 
+log_window :: proc (ctx : ^mu.Context) {
+    if mu.begin_window(ctx, "Log Window", mu.Rect{ 0, screen_height/2, screen_width/2, screen_height/2 }) {
+        defer mu.end_window(ctx)
 
+        win := mu.get_current_container(ctx)
+        win.rect.w = max(win.rect.w, 0)
+        win.rect.w = min(win.rect.w, 0)
+        win.rect.h = max(win.rect.h, 0)
+        win.rect.h = min(win.rect.h, 0)
+
+        /* output text panel */
+        mu.layout_row(ctx, { -1 }, -25)
+        mu.begin_panel(ctx, "Log Output")
+        panel := mu.get_current_container(ctx)
+        mu.layout_row(ctx, { -1 }, -1)
+        mu.text(ctx, strings.to_string(log_sb))
+        mu.end_panel(ctx)
+        if log_updated {
+            panel.scroll.y = panel.content_size.y
+            log_updated = false
+        }
+    }
+}
 
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
