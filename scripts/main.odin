@@ -76,12 +76,17 @@ initialize_window :: proc(db : items.InventoryDatabase) {
         rl.BeginDrawing(); defer rl.EndDrawing()
         rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
         
-        rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
+        rlmu.begin_scope() // same as calling, `rlmu.begin(); defer rlmu.end()`
 
-        button_window(ctx,db) // next parameter is for database reading
-        log_window(ctx)
-        edit_window(ctx)
+        initialize_sub_windows(ctx, db)
     }
+}
+
+
+initialize_sub_windows :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){
+    button_window(ctx,db)
+    edit_window(ctx)
+    log_window(ctx)  
 }
 
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
