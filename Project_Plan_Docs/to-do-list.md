@@ -1,33 +1,70 @@
-# to-do:
+# Project To-Do's :pencil:
 
-### update_item_quantity:
+## priority 1:
 
-## two functions:
+### Touch up the UI window
+- :arrow_forward: status: ASSIGNED
+- contributors: CJ, Ethan
+---
+#### make window resizable:
+- :white_check_mark: status: DONE
+- contributors: Donovan
 
-### sell product :
-- Assigned to: Kameron
-- status: DONE
+#### max screen value:
+- :white_check_mark: status: DONE
+- contributors: CJ, Ethan
 
-### re-stock :
-- Assigned to: Kameron
-- status: DONE
+#### make inner windows scale with outer window:
+- :arrow_forward: status: ASSIGNED
+- contributors: CJ, Ethan
 
-### fix update_price
-- Assigned to: Robert
-- status: To be selected
+#### make the fonts scale with outer window:
+- :arrow_forward: status: ASSIGNED
+- contributors: CJ, Ethan
 
-### make GetTotalValue
-- Assigned to: CJ
-- status: DONE
+### make log window position/ scale properly to bottom left of screen
+- :white_check_mark: status: DONE
+- contributors: Kameron
 
-### fix serialize_inventory
-- Assigned to: CJ
-- status: DONE
+### make item edit  window
 
-### fix save_inventory
-- Assigned to: NONE
-- status: To be selected
+- :arrow_forward: status: ASSIGNED
+- contributors: Robert, Donovan, Kameron
+---
+#### edit window subtasks:
 
-### fix load_inventory
-- Assigned to: NONE
-- status: To be selected
+##### creating the window:
+
+- :white_check_mark: status: DONE
+- contributors: Donovan
+
+##### getting the window to acknowledge item selection:
+
+- :arrows_counterclockwise: status: In-Progress
+- contributors: Donovan
+
+##### creating the edit interface:
+- :arrows_counterclockwise: status: In-Progress
+- contributors: Robert, Donovan
+
+##### add item addition/deletion button:
+
+- :no_entry_sign: status: NO-Progress
+- contributors: NONE
+
+
+## priority 2:
+
+### add method to search through items in button window by manufacturer/name/quantity etc.
+- :no_entry_sign: status: NO-Progress
+- contributors: NONE
+
+### add bulk actions (selecting multiple items to edit, or delete)
+- :no_entry_sign: status: NO-Progress
+- contributors: NONE
+
+## priority 3:
+
+### import/export?
+- :no_entry_sign: status: NO-Progress
+- contributors: NONE
