@@ -66,7 +66,6 @@ initialize_window :: proc(db : items.InventoryDatabase) {
     
     rl.SetWindowState({ .WINDOW_RESIZABLE})
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
-    // defer rl.CloseWindow()
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
