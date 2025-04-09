@@ -41,9 +41,8 @@ main :: proc() {
     initialize_database()
      // Initialize the window and start the main loop
 
-    
-    
 }
+
 initialize_database :: proc(){
     db, success := items.load_inventory(file_name)
     if !success {
@@ -59,10 +58,8 @@ initialize_database :: proc(){
         defer {
             initialize_window(db)
             // fmt.print(db.items)
-        }
-        
-    }
-    
+        }  
+    } 
 }
 
 initialize_window :: proc(db : items.InventoryDatabase) {
