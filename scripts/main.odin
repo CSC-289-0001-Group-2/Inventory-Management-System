@@ -131,7 +131,7 @@ edit_window :: proc (ctx : ^mu.Context) {
         win.rect.h = min(win.rect.h, 0)
         if len(items_selected.items) == 0 {
             
-            label_width:= i32(screen_width/2)
+            label_width:= i32(screen_width/2)-10
             mu.layout_row(ctx, {label_width}, (screen_height/3))
             mu.label(ctx, "No items selected")
  
