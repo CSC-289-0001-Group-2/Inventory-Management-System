@@ -11,7 +11,6 @@ import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
 
-
 log_sb := strings.builder_make()
 log_updated := false
 file_name:= "inventory.dat"
@@ -19,11 +18,8 @@ file_name:= "inventory.dat"
 log_input_text := make_slice([]u8, 128)
 log_input_text_len : int
 
-
 screen_width : i32= 800
 screen_height : i32= 800
-
-
 
 window_right_button_divider : i32 = 5
 
