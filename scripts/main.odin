@@ -13,6 +13,9 @@ import mu "vendor:microui"
 
 log_sb := strings.builder_make()
 log_updated := false
+items_selected:= items.InventoryDatabase{
+    items = make([dynamic]items.Item), // Initialize as a dynamic array
+} 
 file_name:= "inventory.dat"
 
 log_input_text := make_slice([]u8, 128)
@@ -72,8 +75,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
                 continue // Skip empty items
             } else{
                 my_builder:= strings.builder_make()
-                button_width: i32 = i32(screen_width/2)
-                button_num: i32 =20
+                button_width:= i32(screen_width/2)-9
                 strings.write_string(&my_builder,item.name)
                 strings.write_string(&my_builder,"  x  ")
                 strings.write_int(&my_builder, cast(int)item.quantity)
@@ -127,6 +129,16 @@ edit_window :: proc (ctx : ^mu.Context) {
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
+        if len(items_selected.items) == 0 {
+            
+            label_width:= i32(screen_width/2)
+            mu.layout_row(ctx, {label_width}, (screen_height/3))
+            mu.label(ctx, "No items selected")
+ 
+        }
+
+        
+        // mu.layout_row(ctx, {button_width}, (screen_height/8))
 
     }
 }
@@ -139,14 +151,3 @@ write_log :: proc(text: string) {
     log_updated = true
 }
 
-u8_slider :: proc(ctx: ^mu.Context, value: ^u8, low, high: int) -> mu.Result_Set {
-    mu.push_id_uintptr(ctx, transmute(uintptr)value)
-    defer mu.pop_id(ctx)
-
-
-    @(static) tmp: f32
-    tmp = f32(value^)
-    res := mu.slider(ctx, &tmp, f32(low), f32(high), 0, "%.f", { .ALIGN_CENTER })
-    value ^= u8(tmp)
-    return res
-}
