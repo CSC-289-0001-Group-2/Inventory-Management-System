@@ -29,8 +29,8 @@
 
 ##### creating the edit interface:
 
-- status: NO-Progress
-- contributors: NONE
+- status: IN-Progress
+- contributors: Robert, Donovan
 
 ##### connect the interface frontend to the database backend:
 

@@ -10,26 +10,24 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
-// import win "core:sys/windows"
+import win "core:sys/windows"
 
 
 
 log_sb := strings.builder_make()
 log_updated := false
-items_selected:= items.InventoryDatabase{
-    items = make([dynamic]items.Item), // Initialize as a dynamic array
-}
+items_selected: [dynamic]items.Item
 
 file_name:= "inventory.dat"
 
 log_input_text := make_slice([]u8, 128)
 log_input_text_len : int
 
-screen_width:i32 = 800;
-screen_height:i32= 800;
+// screen_width:i32 = 800;
+// screen_height:i32= 800;
 
-// screen_width: = win.GetSystemMetrics(win.SM_CXSCREEN);
-// screen_height: = win.GetSystemMetrics(win.SM_CYSCREEN);
+screen_width: = win.GetSystemMetrics(win.SM_CXSCREEN)-50;
+screen_height: = win.GetSystemMetrics(win.SM_CYSCREEN)-100;
 
 window_right_button_divider : i32 = 5
 
@@ -71,7 +69,7 @@ initialize_window :: proc(db : items.InventoryDatabase) {
     
     rl.SetWindowState({ .WINDOW_RESIZABLE})
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
-    defer rl.CloseWindow()
+    // defer rl.CloseWindow()
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
@@ -160,7 +158,7 @@ edit_window :: proc (ctx : ^mu.Context) {
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
-        if len(items_selected.items) == 0 {
+        if len(items_selected) == 0 {
             label_width:= i32(screen_width/2)-10
             mu.layout_row(ctx, {label_width}, (screen_height/3))
             mu.label(ctx, "No items selected")
@@ -168,7 +166,7 @@ edit_window :: proc (ctx : ^mu.Context) {
         }else{
             label_width:= i32(screen_width/2)-10
             mu.layout_row(ctx, {label_width}, (screen_height/3))
-            mu.label(ctx, items_selected.items[0].name)
+            mu.label(ctx, items_selected[0].name)
 
         }
 
@@ -184,7 +182,10 @@ write_log :: proc(text: string) {
     log_updated = true
 }
 
-fetch_item :: proc(item_to_add : items.Item){
-    items.add_item_by_struct(&items_selected, item_to_add)
+fetch_item :: proc(items_to_edit: ..items.Item){
+    clear(&items_selected)
+    for item in items_to_edit {
+        append(&items_selected, item)
+    }
 }
 
