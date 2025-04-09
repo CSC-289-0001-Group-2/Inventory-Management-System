@@ -32,7 +32,6 @@ find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^Item {
 
 // Adds a new item to the inventory database.
 add_item_by_members :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
-    // Check for duplicate names using find_item_by_name
     if find_item_by_name(db, name) != nil {
         fmt.println("Error: Item with name", name, "already exists.")
         return false
@@ -146,6 +145,8 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
     fmt.println("Restocked", quantity, "unit(s) of", name, "Previous stock", item.quantity - quantity, "- New stock:", item.quantity)
     return true
 }
+
+
 
 // Search for an item in the inventory database by its name and print the result
 search_item_details :: proc(db: ^InventoryDatabase, name: string) -> string {

@@ -10,9 +10,33 @@
 - status: DONE
 - contributors: Kameron
 
-### make item edit window
+### make item edit 
+
 - status: ASSIGNED
 - contributors: Robert, Donovan, Kameron
+---
+#### edit window subtasks:
+
+##### creating the window:
+
+- status: DONE
+- contributors: Donovan
+
+##### getting the window to acknowledge item selection:
+
+- status: IN-Progress
+- contributors: Donovan
+
+##### creating the edit interface:
+
+- status: IN-Progress
+- contributors: Robert, Donovan
+
+##### connect the interface frontend to the database backend:
+
+- status: NO-Progress
+- contributors: NONE
+
 
 ## priority 2:
 
