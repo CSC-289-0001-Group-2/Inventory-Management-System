@@ -10,14 +10,17 @@
 - status: DONE
 - contributors: Kameron
 
-### make item edit window
+### make item edit 
+
 - status: ASSIGNED
 - contributors: Robert, Donovan, Kameron
 ---
 #### edit window subtasks:
+
 ##### creating the window:
 
-
+- status: DONE
+- contributors: Donovan
 
 ##### getting the window to acknowledge item selection:
 
@@ -25,6 +28,12 @@
 - contributors: Donovan
 
 ##### creating the edit interface:
+
+- status: NO-Progress
+- contributors: NONE
+
+##### connect the interface frontend to the database backend:
+
 - status: NO-Progress
 - contributors: NONE
 
