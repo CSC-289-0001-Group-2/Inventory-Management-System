@@ -44,6 +44,7 @@ main :: proc() {
     
     
 }
+
 initialize_database :: proc(){
     db, success := items.load_inventory(file_name)
     if !success {
@@ -150,6 +151,7 @@ log_window :: proc (ctx : ^mu.Context) {
         }
     }
 }
+
 edit_window :: proc (ctx : ^mu.Context) {
     if mu.begin_window(ctx, "Edit window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -173,6 +175,7 @@ edit_window :: proc (ctx : ^mu.Context) {
         
     }
 }
+
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
@@ -188,4 +191,3 @@ fetch_item :: proc(items_to_edit: ..items.Item){
         append(&items_selected, item)
     }
 }
-
