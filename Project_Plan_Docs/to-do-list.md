@@ -1,70 +1,70 @@
-# Project To-Do's
+# Project To-Do's :pencil:
 
 ## priority 1:
 
 ### Touch up the UI window
-- [ ] status: ASSIGNED
+- :arrow_forward: status: ASSIGNED
 - contributors: CJ, Ethan
 ---
 #### make window resizable:
-- [X] status: DONE
+- :white_check_mark: status: DONE
 - contributors: Donovan
 
 #### max screen value:
-- [X] status: DONE
+- :white_check_mark: status: DONE
 - contributors: CJ, Ethan
 
 #### make inner windows scale with outer window:
-- [ ] status: ASSIGNED
+- :arrow_forward: status: ASSIGNED
 - contributors: CJ, Ethan
 
 #### make the fonts scale with outer window:
-- [ ] status: ASSIGNED
+- :arrow_forward: status: ASSIGNED
 - contributors: CJ, Ethan
 
 ### make log window position/ scale properly to bottom left of screen
-- [X] status: DONE
+- :white_check_mark: status: DONE
 - contributors: Kameron
 
 ### make item edit  window
 
-- [ ] status: ASSIGNED
+- :arrow_forward: status: ASSIGNED
 - contributors: Robert, Donovan, Kameron
 ---
 #### edit window subtasks:
 
 ##### creating the window:
 
-- [X] status: DONE
+- :white_check_mark: status: DONE
 - contributors: Donovan
 
 ##### getting the window to acknowledge item selection:
 
-- [ ] status: IN-Progress
+- :arrows_counterclockwise: status: In-Progress
 - contributors: Donovan
 
 ##### creating the edit interface:
-- [ ] status: IN-Progress
+- :arrows_counterclockwise: status: In-Progress
 - contributors: Robert, Donovan
 
 ##### add item addition/deletion button:
 
-- [ ] status: NO-Progress
+- :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
 
 ## priority 2:
 
 ### add method to search through items in button window by manufacturer/name/quantity etc.
-- [ ] status: NO-Progress
+- :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
 ### add bulk actions (selecting multiple items to edit, or delete)
-- [ ] status: NO-Progress
+- :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
 ## priority 3:
 
 ### import/export?
-- [ ] status: NO-Progress
+- :no_entry_sign: status: NO-Progress
 - contributors: NONE
