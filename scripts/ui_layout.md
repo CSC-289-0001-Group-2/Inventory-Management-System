@@ -13,6 +13,21 @@
 ### make item edit window
 - status: ASSIGNED
 - contributors: Robert, Donovan, Kameron
+---
+#### edit window subtasks:
+##### creating the window:
+
+
+
+##### getting the window to acknowledge item selection:
+
+- status: IN-Progress
+- contributors: Donovan
+
+##### creating the edit interface:
+- status: NO-Progress
+- contributors: NONE
+
 
 ## priority 2:
 

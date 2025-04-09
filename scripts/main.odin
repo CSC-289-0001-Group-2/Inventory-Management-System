@@ -15,7 +15,8 @@ log_sb := strings.builder_make()
 log_updated := false
 items_selected:= items.InventoryDatabase{
     items = make([dynamic]items.Item), // Initialize as a dynamic array
-} 
+}
+ 
 file_name:= "inventory.dat"
 
 log_input_text := make_slice([]u8, 128)
@@ -122,7 +123,7 @@ log_window :: proc (ctx : ^mu.Context) {
     }
 }
 edit_window :: proc (ctx : ^mu.Context) {
-    if mu.begin_window(ctx, "edit_window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
+    if mu.begin_window(ctx, "Edit window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         defer mu.end_window(ctx)
         win := mu.get_current_container(ctx)
         win.rect.w = max(win.rect.w, 0)
