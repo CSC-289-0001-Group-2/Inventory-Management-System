@@ -35,7 +35,7 @@ main :: proc() {
             items = make([dynamic]items.Item, 100000000), // Initialize as a dynamic array
         }  
     }
-    rl.SetWindowState({ .WINDOW_RESIZABLE })
+    rl.SetWindowState({ .WINDOW_RESIZABLE})
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
 
@@ -50,48 +50,54 @@ main :: proc() {
         rlmu.begin_scope()  // same as calling, `rlmu.begin(); defer rlmu.end()`
 
         button_window(ctx,db) // next parameter is for database reading
-
         log_window(ctx)
-    } 
+        edit_window(ctx)
+    }
+
+    
+    
 }
 
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
-    if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED}) {
-        // for i in 0..<len(db.items) {
-
-            win := mu.get_current_container(ctx)
-            win.rect.w = max(win.rect.w, 0)
-            win.rect.w = min(win.rect.w, 0)
-            win.rect.h = max(win.rect.h, 0)
-            win.rect.h = min(win.rect.h, 0)
+    if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
+        win := mu.get_current_container(ctx)
+        win.rect.w = max(win.rect.w, 0)
+        win.rect.w = min(win.rect.w, 0)
+        win.rect.h = max(win.rect.h, 0)
+        win.rect.h = min(win.rect.h, 0)
+            
+        defer mu.end_window(ctx)
+        for item in db.items {
+            if item.name == "" {
+                continue // Skip empty items
+            } else{
+                my_builder:= strings.builder_make()
+                button_width: i32 = i32(screen_width/2)
+                button_num: i32 =20
+                strings.write_string(&my_builder,item.name)
+                strings.write_string(&my_builder,"  x  ")
+                strings.write_int(&my_builder, cast(int)item.quantity)
+                strings.write_string(&my_builder,"       $")
+                fmt.sbprintf(&my_builder,"%.2f",item.price)
+                strings.write_string(&my_builder," total price: ")
+                strings.write_string(&my_builder,"     $")
+                fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
                 
-            defer mu.end_window(ctx)
-            button_width: i32 = i32(screen_width/2)
-            button_num: i32 =20
-            initial : string = "Apple x 20"
-            price : string = "$30.34"
-            
-            my_builder:= strings.builder_make()
-            strings.write_string(&my_builder,initial)
-            mu.layout_row(ctx, {button_width}, (screen_height/8))
-            for i : i32 = 0; i < (button_width-i32(len(initial))-i32(len(price)))/4; i+=1{
-                strings.write_string(&my_builder," ")
+                
+                mu.layout_row(ctx, {button_width}, (screen_height/8))
+                label:= strings.to_string(my_builder)
+        
+                if .SUBMIT in mu.button(ctx, label) do write_log(label) //ad onclick response here
             }
-    
-            
-            strings.write_string(&my_builder,price)
-            label:= strings.to_string(my_builder)
-    
-            if .SUBMIT in mu.button(ctx, label) do write_log("Item Successfully Added!")
-        // }
-        // mu.begin_panel(ctx, "Inventory List")
-        // mu.end_panel(ctx)
+
+        }
+        
     }
 
 }
 
 log_window :: proc (ctx : ^mu.Context) {
-    if mu.begin_window(ctx, "Log Window", mu.Rect{ 0, screen_height/2, screen_width/2, screen_height/2 }) {
+    if mu.begin_window(ctx, "Log Window", mu.Rect{ 0, screen_height/2, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         defer mu.end_window(ctx)
 
         win := mu.get_current_container(ctx)
@@ -113,7 +119,17 @@ log_window :: proc (ctx : ^mu.Context) {
         }
     }
 }
+edit_window :: proc (ctx : ^mu.Context) {
+    if mu.begin_window(ctx, "edit_window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
+        defer mu.end_window(ctx)
+        win := mu.get_current_container(ctx)
+        win.rect.w = max(win.rect.w, 0)
+        win.rect.w = min(win.rect.w, 0)
+        win.rect.h = max(win.rect.h, 0)
+        win.rect.h = min(win.rect.h, 0)
 
+    }
+}
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty

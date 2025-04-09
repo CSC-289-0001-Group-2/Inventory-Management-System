@@ -147,6 +147,8 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
     return true
 }
 
+
+
 // Search for an item in the inventory database by its name and print the result
 search_item_details :: proc(db: ^InventoryDatabase, name: string) -> string {
     builder := strings.Builder{}
