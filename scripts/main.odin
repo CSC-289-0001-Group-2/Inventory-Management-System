@@ -10,35 +10,65 @@ import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
+// import win "core:sys/windows"
+
+
 
 log_sb := strings.builder_make()
 log_updated := false
 items_selected:= items.InventoryDatabase{
     items = make([dynamic]items.Item), // Initialize as a dynamic array
 }
- 
+
 file_name:= "inventory.dat"
 
 log_input_text := make_slice([]u8, 128)
 log_input_text_len : int
 
-screen_width : i32= 800
-screen_height : i32= 800
+screen_width:i32 = 800;
+screen_height:i32= 800;
+
+// screen_width: = win.GetSystemMetrics(win.SM_CXSCREEN);
+// screen_height: = win.GetSystemMetrics(win.SM_CYSCREEN);
 
 window_right_button_divider : i32 = 5
 
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
+
+    // fmt.print("Screen Width: ", win.GetSystemMetrics(win.SM_CXSCREEN), "\n")
+    // fmt.print("Screen Height: ", win.GetSystemMetrics(win.SM_CYSCREEN), "\n")
     // tests.run_all_tests()
+    initialize_database()
+     // Initialize the window and start the main loop
+
     
+    
+}
+initialize_database :: proc(){
     db, success := items.load_inventory(file_name)
     if !success {
         fmt.println("Error loading inventory from file:", file_name)
         db := items.InventoryDatabase{
-            items = make([dynamic]items.Item, 100000000), // Initialize as a dynamic array
-        }  
+            items = make([dynamic]items.Item), // Initialize as a dynamic array
+        }
+        items.add_item_by_members(&db, 1, 1.0, "Test Item", "Test Manufacturer")
+        items.add_item_by_members(&db, 2, 2.0, "Test Item 2", "Test Manufacturer 2")
+        items.add_item_by_members(&db, 3, 3.0, "Test Item 3", "Test Manufacturer 3")
+        items.add_item_by_members(&db, 4, 4.0, "Test Item 4", "Test Manufacturer 4")
+
+        defer {
+            initialize_window(db)
+            // fmt.print(db.items)
+        }
+        
     }
+    
+}
+
+initialize_window :: proc(db : items.InventoryDatabase) {
+    
     rl.SetWindowState({ .WINDOW_RESIZABLE})
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
     defer rl.CloseWindow()
@@ -57,9 +87,6 @@ main :: proc() {
         log_window(ctx)
         edit_window(ctx)
     }
-
-    
-    
 }
 
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
@@ -71,12 +98,10 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         win.rect.h = min(win.rect.h, 0)
             
         defer mu.end_window(ctx)
+        // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
-            if item.name == "" {
-                continue // Skip empty items
-            } else{
+            if item.name != "" {
                 my_builder:= strings.builder_make()
-                button_width:= i32(screen_width/2)-9
                 strings.write_string(&my_builder,item.name)
                 strings.write_string(&my_builder,"  x  ")
                 strings.write_int(&my_builder, cast(int)item.quantity)
@@ -85,12 +110,17 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
                 strings.write_string(&my_builder," total price: ")
                 strings.write_string(&my_builder,"     $")
                 fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
-                
-                
-                mu.layout_row(ctx, {button_width}, (screen_height/8))
                 label:= strings.to_string(my_builder)
+                
+                button_width:= i32(screen_width/2)-9
+                mu.layout_row(ctx, {button_width}, (screen_height/8))
+                
         
-                if .SUBMIT in mu.button(ctx, label) do write_log(label) //ad onclick response here
+                if .SUBMIT in mu.button(ctx, label){
+                    fetch_item(item)
+                    write_log(label)
+                }  
+
             }
 
         }
@@ -131,16 +161,18 @@ edit_window :: proc (ctx : ^mu.Context) {
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
         if len(items_selected.items) == 0 {
-            
             label_width:= i32(screen_width/2)-10
             mu.layout_row(ctx, {label_width}, (screen_height/3))
             mu.label(ctx, "No items selected")
  
+        }else{
+            label_width:= i32(screen_width/2)-10
+            mu.layout_row(ctx, {label_width}, (screen_height/3))
+            mu.label(ctx, items_selected.items[0].name)
+
         }
 
         
-        // mu.layout_row(ctx, {button_width}, (screen_height/8))
-
     }
 }
 write_log :: proc(text: string) {
@@ -150,5 +182,9 @@ write_log :: proc(text: string) {
     }
     fmt.sbprint(&log_sb, text)
     log_updated = true
+}
+
+fetch_item :: proc(item_to_add : items.Item){
+    items.add_item_by_struct(&items_selected, item_to_add)
 }
 
