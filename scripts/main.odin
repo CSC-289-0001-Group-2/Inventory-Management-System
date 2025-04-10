@@ -185,8 +185,6 @@ write_log :: proc(text: string) {
 
 fetch_item :: proc(items_to_edit: ..items.Item){
     clear(&items_selected)
-    for item in items_to_edit {
-        append(&items_selected, item)
-    }
+    for item in items_to_edit do append(&items_selected, item)
 }
 
