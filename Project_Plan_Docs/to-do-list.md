@@ -57,7 +57,7 @@
 
 ##### getting the window to acknowledge item selection:
 
-- :arrows_counterclockwise: status: In-Progress
+- :white_check_mark: status: In-Progress
 - contributors:
   - Donovan
 
@@ -66,6 +66,7 @@
 - contributors:
   - Robert
   - Donovan
+  - Kameron
 
 ##### add item addition/deletion button:
 
