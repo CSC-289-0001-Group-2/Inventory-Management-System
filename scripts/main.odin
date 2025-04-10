@@ -50,10 +50,7 @@ initialize_database :: proc(){
         db := items.InventoryDatabase{
             items = make([dynamic]items.Item), // Initialize as a dynamic array
         }
-        items.add_item_by_members(&db, 1, 1.0, "Test Item", "Test Manufacturer")
-        items.add_item_by_members(&db, 2, 2.0, "Test Item 2", "Test Manufacturer 2")
-        items.add_item_by_members(&db, 3, 3.0, "Test Item 3", "Test Manufacturer 3")
-        items.add_item_by_members(&db, 4, 4.0, "Test Item 4", "Test Manufacturer 4")
+        items.add10mil(&db)
 
         defer {
             initialize_window(db)
@@ -95,21 +92,21 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
-            
+           
         defer mu.end_window(ctx)
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                my_builder:= strings.builder_make()
-                strings.write_string(&my_builder,item.name)
-                strings.write_string(&my_builder,"  x  ")
-                strings.write_int(&my_builder, cast(int)item.quantity)
-                strings.write_string(&my_builder,"       $")
-                fmt.sbprintf(&my_builder,"%.2f",item.price)
-                strings.write_string(&my_builder," total price: ")
-                strings.write_string(&my_builder,"     $")
-                fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
-                label:= strings.to_string(my_builder)
+                // my_builder:= strings.builder_make()
+                // strings.write_string(&my_builder,item.name)
+                // strings.write_string(&my_builder,"  x  ")
+                // strings.write_int(&my_builder, cast(int)item.quantity)
+                // strings.write_string(&my_builder,"       $")
+                // fmt.sbprintf(&my_builder,"%.2f",item.price)
+                // strings.write_string(&my_builder," total price: ")
+                // strings.write_string(&my_builder,"     $")
+                // fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
+                // label:= strings.to_string(my_builder)
                 
                 button_width:= i32(screen_width/2)-9
                 mu.layout_row(ctx, {button_width}, (screen_height/8))

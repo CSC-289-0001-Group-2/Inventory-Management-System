@@ -239,3 +239,33 @@ search_items_by_manufacturer :: proc(db: ^InventoryDatabase, manufacturer: strin
 
     return results[:] // Convert the dynamic array to a slice and return it
 }
+
+add10mil :: proc(db: ^InventoryDatabase) {
+    item_amount := 100000
+    reserve(&db.items, item_amount) // Preallocate memory for the items array
+
+    for i := 0; i < item_amount; i += 1{
+        item := Item{
+            id = cast(i32)i,
+            quantity = 1,
+            price = 1.0,
+            name = "Item",
+            manufacturer = "Manufacturer",
+            label = "Label",
+        }
+
+        my_builder:= strings.builder_make()
+        strings.write_string(&my_builder,item.name)
+        strings.write_string(&my_builder,"  x  ")
+        strings.write_int(&my_builder, cast(int)item.quantity)
+        strings.write_string(&my_builder,"       $")
+        fmt.sbprintf(&my_builder,"%.2f",item.price)
+        strings.write_string(&my_builder," total price: ")
+        strings.write_string(&my_builder,"     $")
+        fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
+        item.label = strings.to_string(my_builder) // Convert the builder's contents to a string
+
+        append(&db.items, item) // Append the new item to the items array
+    }
+}
+

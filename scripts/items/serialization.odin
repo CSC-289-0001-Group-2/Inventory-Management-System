@@ -16,8 +16,9 @@ Item :: struct {
     price: f32,
     name: string,
     manufacturer: string,
+	label : string,
 }
-#assert(size_of(Item) == 8 + 4 + 4 + 16 + 16)
+#assert(size_of(Item) == 8 + 4 + 4 + 16 + 16 + 16)
 
 serialize_inventory :: proc(buf: ^bytes.Buffer, database: InventoryDatabase) {
 	// Serialize the number of items in the array. Use explicit Little Endian encoding.
