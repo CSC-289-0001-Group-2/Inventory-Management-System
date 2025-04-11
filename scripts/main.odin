@@ -38,7 +38,7 @@ main :: proc() {
 
     // fmt.print("Screen Width: ", win.GetSystemMetrics(win.SM_CXSCREEN), "\n")
     // fmt.print("Screen Height: ", win.GetSystemMetrics(win.SM_CYSCREEN), "\n")
-    // tests.run_all_tests()
+    tests.run_all_tests()
     initialize_database()
      // Initialize the window and start the main loop
 
@@ -146,13 +146,9 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
                     fetch_item(item)
                     write_log(item.label)
                 }  
-
             }
-
-        }
-        
+        } 
     }
-
 }
 
 log_window :: proc (ctx : ^mu.Context) {

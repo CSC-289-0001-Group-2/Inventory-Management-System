@@ -27,7 +27,7 @@
   - Ethan
 
 #### make the fonts scale with outer window:
-- :arrow_forward: status: ASSIGNED
+- :x: status: AXED
 - contributors:
   - CJ
   - Ethan
