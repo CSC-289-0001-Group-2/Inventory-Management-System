@@ -11,6 +11,7 @@ import "core:strings"
 import rl "vendor:raylib"
 import mu "vendor:microui"
 import win "core:sys/windows"
+import virtual "core:mem/virtual"
 
 
 
@@ -66,8 +67,14 @@ initialize_window :: proc(db : items.InventoryDatabase) {
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
+    allocator: virtual.Arena 
+    _= virtual.arena_init_growing(&allocator)// Set the allocator for the database
+
+    context.allocator = virtual.arena_allocator(&allocator) 
+
     for !rl.WindowShouldClose() {
-        defer free_all(context.temp_allocator)
+        begin := virtual.arena_temp_begin(&allocator)
+        defer virtual.arena_temp_end(begin)
 
         rl.BeginDrawing(); defer rl.EndDrawing()
         rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
@@ -78,13 +85,42 @@ initialize_window :: proc(db : items.InventoryDatabase) {
     }
 }
 
-
 initialize_sub_windows :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){
     button_window(ctx,db)
     edit_window(ctx)
     log_window(ctx)  
 }
 
+// number_i32 :: proc(ctx: ^Context, value: ^i32, step: Real, fmt_string: string = SLIDER_FMT, opt: Options = {.ALIGN_CENTER}) -> (res: Result_Set) {
+//     id := get_id(ctx, uintptr(value))
+//     base := layout_next(ctx)
+//     last := value^
+
+//     /* handle text input mode */
+//     if number_textbox(ctx, value, base, id, fmt_string) {
+//         return
+//     }
+
+//     /* handle normal mode */
+//     update_control(ctx, id, base, opt)
+
+//     /* handle input */
+//     if ctx.focus_id == id && ctx.mouse_down_bits == {.LEFT} {
+//         value^ += i32(ctx.mouse_delta.x) * step
+//     }
+//     /* set flag if value changed */
+//     if value^ != last {
+//         res += {.CHANGE}
+//     }
+
+//     /* draw base */
+//     draw_control_frame(ctx, id, base, .BASE, opt)
+//     /* draw text  */
+//     text_buf: [4096]byte
+//     draw_control_text(ctx, fmt.bprintf(text_buf[:], fmt_string, value^), base, .TEXT, opt)
+
+//     return
+// }
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
     if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         win := mu.get_current_container(ctx)
@@ -97,24 +133,18 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                // my_builder:= strings.builder_make()
-                // strings.write_string(&my_builder,item.name)
-                // strings.write_string(&my_builder,"  x  ")
-                // strings.write_int(&my_builder, cast(int)item.quantity)
-                // strings.write_string(&my_builder,"       $")
-                // fmt.sbprintf(&my_builder,"%.2f",item.price)
-                // strings.write_string(&my_builder," total price: ")
-                // strings.write_string(&my_builder,"     $")
-                // fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
-                // label:= strings.to_string(my_builder)
-                
                 button_width:= i32(screen_width/2)-9
                 mu.layout_row(ctx, {button_width}, (screen_height/8))
-                
+                // // displayed: name x quantity, single price, total price
+                // mu.label(ctx,item.name)
+                // mu.label(ctx, " x ")
+                // mu.number(ctx, &item.quantity)
+                // mu.label(ctx, "       $")
+                // mu.number(ctx, &item.price,0.01)
         
-                if .SUBMIT in mu.button(ctx, label){
+                if .SUBMIT in mu.button(ctx, item.label){
                     fetch_item(item)
-                    write_log(label)
+                    write_log(item.label)
                 }  
 
             }

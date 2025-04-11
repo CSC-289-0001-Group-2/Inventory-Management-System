@@ -9,6 +9,7 @@ import "core:bytes"
 import "core:bufio"
 import "base:runtime"
 import "core:mem"
+import virtual "core:mem/virtual"
 import "core:strings"
 import "core:time"
 import "core:testing"
@@ -36,15 +37,17 @@ add_item_by_members :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, n
         fmt.println("Error: Item with name", name, "already exists.")
         return false
     }
-
     // Create a new Item
     new_item := Item{
         id = cast(i32)(len(db.items) + 1), // Assign a unique ID based on the array length
         quantity = quantity,
         price = price,
         name = name,
+
         manufacturer = manufacturer,
     }
+
+    initialize_item_label(&new_item) // Initialize the label for the new item
 
     // Append the new item to the items array
     append(&db.items, new_item)
@@ -123,6 +126,7 @@ sell_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> boo
     }
 
     item.quantity -= quantity
+    
     log_operation("Sold", item^)
     fmt.println("Sold", quantity, "unit(s) of", name, "- Remaining stock:", item.quantity)
     return true
@@ -241,9 +245,12 @@ search_items_by_manufacturer :: proc(db: ^InventoryDatabase, manufacturer: strin
 }
 
 add10mil :: proc(db: ^InventoryDatabase) {
-    item_amount := 100000
+    item_amount := 10000
+    _= virtual.arena_init_growing(&db.allocator)// Set the allocator for the database
+    old_allocator := context.allocator
+    defer context.allocator = old_allocator
+    context.allocator = virtual.arena_allocator(&db.allocator) 
     reserve(&db.items, item_amount) // Preallocate memory for the items array
-
     for i := 0; i < item_amount; i += 1{
         item := Item{
             id = cast(i32)i,
@@ -253,19 +260,23 @@ add10mil :: proc(db: ^InventoryDatabase) {
             manufacturer = "Manufacturer",
             label = "Label",
         }
-
-        my_builder:= strings.builder_make()
-        strings.write_string(&my_builder,item.name)
-        strings.write_string(&my_builder,"  x  ")
-        strings.write_int(&my_builder, cast(int)item.quantity)
-        strings.write_string(&my_builder,"       $")
-        fmt.sbprintf(&my_builder,"%.2f",item.price)
-        strings.write_string(&my_builder," total price: ")
-        strings.write_string(&my_builder,"     $")
-        fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
-        item.label = strings.to_string(my_builder) // Convert the builder's contents to a string
+        initialize_item_label(&item) // Convert the builder's contents to a string
 
         append(&db.items, item) // Append the new item to the items array
     }
+}
+
+
+initialize_item_label :: proc( item: ^Item) {
+    my_builder:= strings.builder_make()
+    strings.write_string(&my_builder,item.name)
+    strings.write_string(&my_builder,"  x  ")
+    strings.write_int(&my_builder, cast(int)item.quantity)
+    strings.write_string(&my_builder,"       $")
+    fmt.sbprintf(&my_builder,"%.2f",item.price)
+    strings.write_string(&my_builder," total price: ")
+    strings.write_string(&my_builder,"     $")
+    fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
+    item.label = strings.to_string(my_builder) // Convert the builder's contents to a string
 }
 

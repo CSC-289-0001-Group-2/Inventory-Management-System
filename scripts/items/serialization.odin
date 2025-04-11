@@ -5,9 +5,11 @@ import "core:bytes"
 import "core:encoding/endian"
 import "core:mem"
 import "core:strings"
+import virtual "core:mem/virtual"
 
 InventoryDatabase :: struct {
 	items: [dynamic]Item,
+	allocator: virtual.Arena,
 }
 
 Item :: struct {
