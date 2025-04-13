@@ -24,8 +24,15 @@ file_name:= "inventory.dat"
 log_input_text := make_slice([]u8, 128)
 log_input_text_len : int
 
-// screen_width:i32 = 800;
-// screen_height:i32= 800;
+editor_input_text := make_slice([]u8, 128)
+editor_input_text_len : int
+
+editor_input_text_2 := make_slice([]u8, 128)
+editor_input_text_len_2 : int
+
+editor_input_text_3 : f32
+editor_input_text_rect : mu.Rect
+
 
 screen_width: = win.GetSystemMetrics(win.SM_CXSCREEN)-50;
 screen_height: = win.GetSystemMetrics(win.SM_CYSCREEN)-100;
@@ -49,13 +56,18 @@ initialize_database :: proc(){
         db := items.InventoryDatabase{
             items = make([dynamic]items.Item), // Initialize as a dynamic array
         }
-        items.add10mil(&db)
+        items.addBenchmark(&db, 10000) // Add 1000 items to the database for testing
 
-        defer {
+
+        defer{
             initialize_window(db)
             // fmt.print(db.items)
         }  
-    } 
+    }else {
+        fmt.println("Loaded inventory from file:", file_name)
+        // fmt.print(db.items)
+        initialize_window(db)
+    }
 }
 
 initialize_window :: proc(db : items.InventoryDatabase) {
@@ -145,15 +157,33 @@ edit_window :: proc (ctx : ^mu.Context) {
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
-        if len(items_selected) == 0 {
-            label_width:= i32(screen_width/2)-10
-            mu.layout_row(ctx, {label_width}, (screen_height/3))
-            mu.label(ctx, "No items selected")
+        // if len(items_selected) == 0 {
+        //     label_width:= i32(screen_width/2)-10
+        //     mu.layout_row(ctx, {label_width}, (screen_height/3))
+        //     mu.label(ctx, "No items selected")
+        editor_input_text_rect := mu.Rect{32, 32, 320, 320}
+        // if mu.number_textbox(ctx, &editor_input_text_3, editor_input_text_rect, ctx.last_id, "%.2f") {
+        //     // the text box has been edited, and the value has been updated
+        //     // you can now use the updated value
+        // }
  
-        }else{ //TODO: add edit functionality
-            label_width:= i32(screen_width/2)-10
-            mu.layout_row(ctx, {label_width}, (screen_height/3))
-            mu.label(ctx, items_selected[0].name)
+        // }else
+        { //TODO: add edit functionality
+            label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
+            interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
+
+            mu.layout_row(ctx, {label_width,interface_width}, (screen_height/25))
+            mu.label(ctx, "Item Name:")
+            if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
+                mu.set_focus(ctx, ctx.last_id)   
+            }
+            mu.layout_row(ctx, {label_width,interface_width}, (screen_height/25))
+            mu.label(ctx, "Item Manufacturer:")
+            if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
+                mu.set_focus(ctx, ctx.last_id)   
+            }
+            mu.label(ctx, "Item Quantity:")
+            
 
         }  
     }

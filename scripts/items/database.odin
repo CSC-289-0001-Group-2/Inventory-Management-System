@@ -243,23 +243,21 @@ search_items_by_manufacturer :: proc(db: ^InventoryDatabase, manufacturer: strin
     return results[:] // Convert the dynamic array to a slice and return it
 }
 
-add10mil :: proc(db: ^InventoryDatabase) {
-    item_amount := 10000
-    _= virtual.arena_init_growing(&db.allocator)// Set the allocator for the database
-    old_allocator := context.allocator
-    defer context.allocator = old_allocator
-    context.allocator = virtual.arena_allocator(&db.allocator) 
-    reserve(&db.items, item_amount) // Preallocate memory for the items array
-    for i := 0; i < item_amount; i += 1{
+addBenchmark :: proc(db: ^InventoryDatabase, amount: int) {
+    for i := 0; i < amount; i += 1{
+        my_builder:= strings.builder_make()
+        strings.write_string(&my_builder,"Item - number: ")
+        strings.write_int(&my_builder, i)
+
         item := Item{
             id = cast(i32)i,
             quantity = 1,
             price = 1.0,
-            name = "Item",
+            name = strings.to_string(my_builder),
             manufacturer = "Manufacturer",
         }
 
-        append(&db.items, item) // Append the new item to the items array
+        add_item_by_struct(db, item) // Add the item to the database
     }
 }
 
