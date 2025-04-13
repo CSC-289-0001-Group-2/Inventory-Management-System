@@ -170,11 +170,17 @@ edit_window :: proc (ctx : ^mu.Context) {
             interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
 
             mu.layout_row(ctx, {header_width}, (screen_height/25))
+            my_builder:= strings.builder_make()
+            strings.write_string(&my_builder, "Edit Item/s: ")
+            for item in items_selected{
+                strings.write_string(&my_builder, " ")
+                strings.write_string(&my_builder, item.name)
+            }
             // for items in items_selected {
             //     item_label := items.initialize_label(items)
             //     mu.label(ctx, item_label)
             // }
-            mu.label(ctx, "Edit Item: ")
+            mu.label(ctx, strings.to_string(my_builder))
 
             mu.layout_row(ctx, {label_width,interface_width}, (screen_height/25))
             mu.label(ctx, "Item Name:")
