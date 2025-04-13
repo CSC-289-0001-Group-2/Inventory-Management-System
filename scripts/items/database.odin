@@ -9,7 +9,7 @@ import "core:bytes"
 import "core:bufio"
 import "base:runtime"
 import "core:mem"
-import virtual "core:mem/virtual"
+import  virtual "core:mem/virtual"
 import "core:strings"
 import "core:time"
 import "core:testing"
@@ -47,7 +47,6 @@ add_item_by_members :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, n
         manufacturer = manufacturer,
     }
 
-    initialize_item_label(&new_item) // Initialize the label for the new item
 
     // Append the new item to the items array
     append(&db.items, new_item)
@@ -258,16 +257,14 @@ add10mil :: proc(db: ^InventoryDatabase) {
             price = 1.0,
             name = "Item",
             manufacturer = "Manufacturer",
-            label = "Label",
         }
-        initialize_item_label(&item) // Convert the builder's contents to a string
 
         append(&db.items, item) // Append the new item to the items array
     }
 }
 
 
-initialize_item_label :: proc( item: ^Item) {
+initialize_label :: proc(item: Item) -> string {
     my_builder:= strings.builder_make()
     strings.write_string(&my_builder,item.name)
     strings.write_string(&my_builder,"  x  ")
@@ -277,6 +274,6 @@ initialize_item_label :: proc( item: ^Item) {
     strings.write_string(&my_builder," total price: ")
     strings.write_string(&my_builder,"     $")
     fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
-    item.label = strings.to_string(my_builder) // Convert the builder's contents to a string
+    return strings.to_string(my_builder) // Convert the builder's contents to a string
 }
 

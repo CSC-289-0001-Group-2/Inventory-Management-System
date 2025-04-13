@@ -26,11 +26,7 @@
   - CJ
   - Ethan
 
-#### make the fonts scale with outer window:
-- :x: status: AXED
-- contributors:
-  - CJ
-  - Ethan
+
 
 ### make log window position/ scale properly to bottom left of screen
 - :white_check_mark: status: DONE
@@ -87,5 +83,9 @@
 ## priority 3:
 ---
 ### import/export?
+- :no_entry_sign: status: NO-Progress
+- contributors: NONE
+
+#### make the fonts scale with outer window:
 - :no_entry_sign: status: NO-Progress
 - contributors: NONE

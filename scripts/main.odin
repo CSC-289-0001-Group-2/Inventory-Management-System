@@ -36,9 +36,7 @@ bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
 
-    // fmt.print("Screen Width: ", win.GetSystemMetrics(win.SM_CXSCREEN), "\n")
-    // fmt.print("Screen Height: ", win.GetSystemMetrics(win.SM_CYSCREEN), "\n")
-    tests.run_all_tests()
+    // tests.run_all_tests()
     initialize_database()
      // Initialize the window and start the main loop
 
@@ -67,14 +65,14 @@ initialize_window :: proc(db : items.InventoryDatabase) {
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
 
-    allocator: virtual.Arena 
-    _= virtual.arena_init_growing(&allocator)// Set the allocator for the database
+    // allocator: virtual.Arena 
+    // _= virtual.arena_init_growing(&allocator)// Set the allocator for the database
 
-    context.allocator = virtual.arena_allocator(&allocator) 
+    // context.allocator = virtual.arena_allocator(&allocator) 
 
     for !rl.WindowShouldClose() {
-        begin := virtual.arena_temp_begin(&allocator)
-        defer virtual.arena_temp_end(begin)
+        // begin := virtual.arena_temp_begin(&allocator)
+        // defer virtual.arena_temp_end(begin)
 
         rl.BeginDrawing(); defer rl.EndDrawing()
         rl.ClearBackground({ bg.r, bg.g, bg.b, 255 })
@@ -91,36 +89,6 @@ initialize_sub_windows :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){
     log_window(ctx)  
 }
 
-// number_i32 :: proc(ctx: ^Context, value: ^i32, step: Real, fmt_string: string = SLIDER_FMT, opt: Options = {.ALIGN_CENTER}) -> (res: Result_Set) {
-//     id := get_id(ctx, uintptr(value))
-//     base := layout_next(ctx)
-//     last := value^
-
-//     /* handle text input mode */
-//     if number_textbox(ctx, value, base, id, fmt_string) {
-//         return
-//     }
-
-//     /* handle normal mode */
-//     update_control(ctx, id, base, opt)
-
-//     /* handle input */
-//     if ctx.focus_id == id && ctx.mouse_down_bits == {.LEFT} {
-//         value^ += i32(ctx.mouse_delta.x) * step
-//     }
-//     /* set flag if value changed */
-//     if value^ != last {
-//         res += {.CHANGE}
-//     }
-
-//     /* draw base */
-//     draw_control_frame(ctx, id, base, .BASE, opt)
-//     /* draw text  */
-//     text_buf: [4096]byte
-//     draw_control_text(ctx, fmt.bprintf(text_buf[:], fmt_string, value^), base, .TEXT, opt)
-
-//     return
-// }
 button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, items: [dynamic]Item
     if mu.begin_window(ctx, "Inventory List", mu.Rect{ screen_width/2, 0, screen_width/2, screen_height },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         win := mu.get_current_container(ctx)
@@ -131,21 +99,16 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
            
         defer mu.end_window(ctx)
         // fmt.print("database length: ", len(db.items), "\n")
-        for item in db.items {
-            if item.name != "" {
+        for it_item in db.items {
+            if it_item.name != "" {
                 button_width:= i32(screen_width/2)-9
                 mu.layout_row(ctx, {button_width}, (screen_height/8))
-                // // displayed: name x quantity, single price, total price
-                // mu.label(ctx,item.name)
-                // mu.label(ctx, " x ")
-                // mu.number(ctx, &item.quantity)
-                // mu.label(ctx, "       $")
-                // mu.number(ctx, &item.price,0.01)
-        
-                if .SUBMIT in mu.button(ctx, item.label){
-                    fetch_item(item)
-                    write_log(item.label)
-                }  
+                button_label := items.initialize_label(it_item)
+                
+                if .SUBMIT in mu.button(ctx, button_label){ 
+                    fetch_item(it_item)
+                    write_log(button_label)   
+                }
             }
         } 
     }
@@ -187,14 +150,12 @@ edit_window :: proc (ctx : ^mu.Context) {
             mu.layout_row(ctx, {label_width}, (screen_height/3))
             mu.label(ctx, "No items selected")
  
-        }else{
+        }else{ //TODO: add edit functionality
             label_width:= i32(screen_width/2)-10
             mu.layout_row(ctx, {label_width}, (screen_height/3))
             mu.label(ctx, items_selected[0].name)
 
-        }
-
-        
+        }  
     }
 }
 write_log :: proc(text: string) {
@@ -208,6 +169,7 @@ write_log :: proc(text: string) {
 
 fetch_item :: proc(items_to_edit: ..items.Item){
     clear(&items_selected)
+    fmt.print("Selected item: ", items_to_edit[0].name, "\n")
     for item in items_to_edit do append(&items_selected, item)
 }
 
