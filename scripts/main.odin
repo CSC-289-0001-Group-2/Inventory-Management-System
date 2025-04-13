@@ -30,7 +30,7 @@ editor_input_text_len : int
 editor_input_text_2 := make_slice([]u8, 128)
 editor_input_text_len_2 : int
 
-editor_input_text_3 : f32
+editor_input_num : f32
 editor_input_text_rect : mu.Rect
 
 
@@ -111,14 +111,14 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
            
         defer mu.end_window(ctx)
         // fmt.print("database length: ", len(db.items), "\n")
-        for it_item in db.items {
-            if it_item.name != "" {
+        for item in db.items {
+            if item.name != "" {
                 button_width:= i32(screen_width/2)-9
                 mu.layout_row(ctx, {button_width}, (screen_height/8))
-                button_label := items.initialize_label(it_item)
+                button_label := items.initialize_label(item)
                 
                 if .SUBMIT in mu.button(ctx, button_label){ 
-                    fetch_item(it_item)
+                    fetch_item(item)
                     write_log(button_label)   
                 }
             }
@@ -157,20 +157,24 @@ edit_window :: proc (ctx : ^mu.Context) {
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
-        // if len(items_selected) == 0 {
-        //     label_width:= i32(screen_width/2)-10
-        //     mu.layout_row(ctx, {label_width}, (screen_height/3))
-        //     mu.label(ctx, "No items selected")
-        editor_input_text_rect := mu.Rect{32, 32, 320, 320}
-        // if mu.number_textbox(ctx, &editor_input_text_3, editor_input_text_rect, ctx.last_id, "%.2f") {
-        //     // the text box has been edited, and the value has been updated
-        //     // you can now use the updated value
-        // }
+        if len(items_selected) == 0 {
+            label_width:= i32(screen_width/2)-10
+            mu.layout_row(ctx, {label_width}, (screen_height/3))
+            mu.label(ctx, "No items selected")
+
  
-        // }else
+        }else
         { //TODO: add edit functionality
+            header_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
             label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
             interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
+
+            mu.layout_row(ctx, {header_width}, (screen_height/25))
+            // for items in items_selected {
+            //     item_label := items.initialize_label(items)
+            //     mu.label(ctx, item_label)
+            // }
+            mu.label(ctx, "Edit Item: ")
 
             mu.layout_row(ctx, {label_width,interface_width}, (screen_height/25))
             mu.label(ctx, "Item Name:")
@@ -183,6 +187,12 @@ edit_window :: proc (ctx : ^mu.Context) {
                 mu.set_focus(ctx, ctx.last_id)   
             }
             mu.label(ctx, "Item Quantity:")
+
+            editor_input_text_rect := mu.Rect{32, 32, 320, 320}
+            if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
+                // the text box has been edited, and the value has been updated
+                // you can now use the updated value
+            }
             
 
         }  
