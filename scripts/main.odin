@@ -149,6 +149,7 @@ log_window :: proc (ctx : ^mu.Context) {
         }
     }
 }
+
 edit_window :: proc (ctx : ^mu.Context) {
     if mu.begin_window(ctx, "Edit window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -186,18 +187,31 @@ edit_window :: proc (ctx : ^mu.Context) {
             if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
                 mu.set_focus(ctx, ctx.last_id)   
             }
-            mu.label(ctx, "Item Quantity:")
-
-            editor_input_text_rect := mu.Rect{32, 32, 320, 320}
-            if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
-                // the text box has been edited, and the value has been updated
-                // you can now use the updated value
-            }
+            mu.label(ctx, "Item Quantity:") // Label for the quantity field
             
+            // Define a rectangle for the number textbox
+            editor_input_text_rect := mu.Rect{32, 32, 320, 320}
+            
+            // Use a temporary f32 variable for the number textbox
+            temp_num: f32 = editor_input_num // No casting needed here; both are f32
+            if mu.number_textbox(ctx, &temp_num, editor_input_text_rect, ctx.last_id, "%.0f") {
+                // Update the floating-point value of editor_input_num
+                editor_input_num = temp_num // Both are f32, so this is valid
+
+                fmt.println("Updated Quantity (f32):", editor_input_num)
+
+                // Optional: Update the selected item's quantity in the database
+                if len(items_selected) > 0 {
+                    // Cast editor_input_num (f32) to i32 before assigning
+                    items_selected[0].quantity = cast(i32)(editor_input_num)
+                    fmt.println("Updated item quantity in memory (i32):", items_selected[0].quantity)
+                }
+            }            
 
         }  
     }
 }
+
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
@@ -212,4 +226,3 @@ fetch_item :: proc(items_to_edit: ..items.Item){
     fmt.print("Selected item: ", items_to_edit[0].name, "\n")
     for item in items_to_edit do append(&items_selected, item)
 }
-
