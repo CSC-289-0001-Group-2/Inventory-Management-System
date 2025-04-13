@@ -39,6 +39,13 @@ screen_height: = win.GetSystemMetrics(win.SM_CYSCREEN)-100;
 
 window_right_button_divider : i32 = 5
 
+
+
+header_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
+label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
+interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
+button_width:= i32(screen_width/2)-9
+
 bg : [3]u8 = { 90, 95, 100 }
 
 main :: proc() {
@@ -113,7 +120,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                button_width:= i32(screen_width/2)-9
+                
                 mu.layout_row(ctx, {button_width}, (screen_height/8))
                 button_label := items.initialize_label(item)
                 
@@ -149,6 +156,7 @@ log_window :: proc (ctx : ^mu.Context) {
         }
     }
 }
+
 edit_window :: proc (ctx : ^mu.Context) {
     if mu.begin_window(ctx, "Edit window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -168,22 +176,25 @@ edit_window :: proc (ctx : ^mu.Context) {
             header_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
             label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
             interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
+            single_item := len(items_selected) == 1
 
             mu.layout_row(ctx, {header_width}, (screen_height/25))
             my_builder:= strings.builder_make()
             strings.write_string(&my_builder, "Edit Item/s: ")
+            
             for item in items_selected{
                 strings.write_string(&my_builder, " ")
                 strings.write_string(&my_builder, item.name)
             }
-            // for items in items_selected {
-            //     item_label := items.initialize_label(items)
-            //     mu.label(ctx, item_label)
-            // }
+
             mu.label(ctx, strings.to_string(my_builder))
 
             mu.layout_row(ctx, {label_width,interface_width}, (screen_height/25))
             mu.label(ctx, "Item Name:")
+            // if single_item{
+            //     editor_input_text = strings.to
+            // }
+             
             if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
                 mu.set_focus(ctx, ctx.last_id)   
             }
@@ -200,6 +211,7 @@ edit_window :: proc (ctx : ^mu.Context) {
                 // you can now use the updated value
             }
             
+            
 
         }  
     }
@@ -215,7 +227,6 @@ write_log :: proc(text: string) {
 
 fetch_item :: proc(items_to_edit: ..items.Item){
     clear(&items_selected)
-    fmt.print("Selected item: ", items_to_edit[0].name, "\n")
     for item in items_to_edit do append(&items_selected, item)
 }
 
