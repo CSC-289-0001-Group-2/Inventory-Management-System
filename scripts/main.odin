@@ -235,6 +235,7 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 mu.set_focus(ctx, ctx.last_id)
                 submitted2 = true
             }
+
             if .SUBMIT in mu.button(ctx, "Change Manufacturer") {
                 submitted2 = true
             }
@@ -270,17 +271,15 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 write_log("Quantity Changed To:")
                 write_log(new_quantity)
                 editor_input_text_len_3 = 0
-            }
 
             editor_input_text_rect := mu.Rect{32, 32, 320, 320}
             if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
                 // the text box has been edited, and the value has been updated
                 // you can now use the updated value
             }
+            }
+        }
             
-            
-
-        }  
     }
 }
 write_log :: proc(text: string) {
@@ -305,4 +304,3 @@ is_item_selected :: proc(item: items.Item) -> bool {
     }
     return false
 }
-
