@@ -211,6 +211,11 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 }
                 mu.label(ctx, strings.to_string(new_builder))
             }
+            for &item in db.items {
+                if is_item_selected(item) {
+                    fmt.print("item name: ", item.name, "\n")
+                }
+            }
             
             mu.layout_row(ctx, {label_width,interface_width,label_width}, (screen_height/25))
             mu.label(ctx, "Item Manufacturer:")
@@ -261,5 +266,14 @@ write_log :: proc(text: string) {
 fetch_item :: proc(items_to_edit: ..items.Item){
     clear(&items_selected)
     for item in items_to_edit do append(&items_selected, item)
+}
+
+is_item_selected :: proc(item: items.Item) -> bool {
+    for selected_item in items_selected {
+        if item.id == selected_item.id {
+            return true
+        }
+    }
+    return false
 }
 
