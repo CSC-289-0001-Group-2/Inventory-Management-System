@@ -176,15 +176,12 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
  
         }else
         { //TODO: add edit functionality
-            header_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
-            label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
-            interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
             single_item := len(items_selected) == 1
 
             mu.layout_row(ctx, {header_width}, (screen_height/25))
             my_builder:= strings.builder_make()
             strings.write_string(&my_builder, "Edit Item/s: ")
-            
+
             for item in items_selected{
                 strings.write_string(&my_builder, " ")
                 strings.write_string(&my_builder, item.name)
@@ -205,6 +202,9 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
             // if single_item{
             //     editor_input_text = strings.to
             // }
+
+            mu.layout_row(ctx, {label_width,interface_width,label_width}, (screen_height/25))
+            mu.label(ctx, "Item Name:")
              
 
             if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
@@ -229,12 +229,42 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 }
             }
 
+
+                mu.set_focus(ctx, ctx.last_id)  
+            }
+            // if editor_input_text_len > 0 {
+            //     // the text box has been edited, and the value has been updated
+            //     // you can now use the updated value
+            //     for item in items_selected{
+            //         fmt.print("item name: ", strings.clone_from_bytes(editor_input_text), "\n")
+            //     }
+            // }
+            if single_item == true{
+                mu.label(ctx, items_selected[0].name)
+            }else {
+                new_builder:= strings.builder_make()
+                strings.write_string(&new_builder, " ")
+                for item in items_selected{
+                    strings.write_string(&new_builder, item.name)
+                    strings.write_string(&new_builder, " ,")
+                    
+                }
+                mu.label(ctx, strings.to_string(new_builder))
+            }
+            for &item in db.items {
+                if is_item_selected(item) {
+                    fmt.print("item name: ", item.name, "\n")
+                }
+            }
+            
+            mu.layout_row(ctx, {label_width,interface_width,label_width}, (screen_height/25))
             mu.label(ctx, "Item Manufacturer:")
             mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
             if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
                 mu.set_focus(ctx, ctx.last_id)
                 submitted2 = true
             }
+
 
             if .SUBMIT in mu.button(ctx, "Change Manufacturer") {
                 submitted2 = true
@@ -254,6 +284,18 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 }
             }
 
+            if single_item == true{
+                mu.label(ctx, items_selected[0].manufacturer)
+            }else {
+                new_builder:= strings.builder_make()
+                strings.write_string(&new_builder, " ")
+                for item in items_selected{
+                    strings.write_string(&new_builder, item.manufacturer)
+                    strings.write_string(&new_builder, " ,")
+                    
+                }
+                mu.label(ctx, strings.to_string(new_builder))
+            }
             mu.label(ctx, "Item Quantity:")
             mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
             if .SUBMIT in mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3) {
@@ -277,8 +319,16 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 // the text box has been edited, and the value has been updated
                 // you can now use the updated value
             }
-            }
+          }
         }
+
+            // fmt.print("name text: ",strings.clone_from_bytes(editor_input_text), "\n")
+            padding:i32 = 50
+
+            mu.layout_row(ctx,{button_width-padding}, (screen_height/25))
+            if .SUBMIT in mu.button(ctx, "Confirm Edit"){ 
+
+            }
             
     }
 }
