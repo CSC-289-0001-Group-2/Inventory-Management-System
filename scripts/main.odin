@@ -271,7 +271,70 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 write_log(new_quantity)
                 editor_input_text_len_3 = 0
             }
-
+            if .SUBMIT in mu.button(ctx, "Confirm Edits") {
+                if editor_input_text_len <= 0 || editor_input_text_len_2 <= 0 {
+                    submitted = false
+                    submitted2 = false
+                    submitted3 = false
+                }
+                if editor_input_text_len > 0 || editor_input_text_len_2 > 0 {
+                    submitted = false
+                    submitted2 = false
+                    submitted3 = true
+                }
+                if editor_input_text_len_2 <= 0 || editor_input_text_len > 0 {
+                    submitted = true
+                    submitted2 = false
+                    submitted3 = false
+                }
+                if editor_input_text_len <= 0 || editor_input_text_len_2 > 0 {
+                    submitted = false
+                    submitted2 = true
+                    submitted3 = false
+                }
+            }
+            if submitted == true {
+                new_name = string(editor_input_text[:editor_input_text_len])
+                write_log("Name Changed To:")
+                write_log(new_name)
+                editor_input_text_len = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.name = new_name
+                    }
+                }
+            }
+            if submitted2 == true {
+                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                write_log("Manufacturer Changed To:")
+                write_log(new_manufacturer)
+                editor_input_text_len_2 = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.manufacturer = new_manufacturer
+                    }
+                }
+            }
+            if submitted3 == true {
+                new_name = string(editor_input_text[:editor_input_text_len])
+                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                write_log("Name Changed To:")
+                write_log(new_name)
+                write_log("Manufacturer Changed To:")
+                write_log(new_manufacturer)
+                editor_input_text_len = 0
+                editor_input_text_len_2 = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.name = new_name
+                    }
+                }
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.manufacturer = new_manufacturer
+                }
+            }
+        }
             editor_input_text_rect := mu.Rect{32, 32, 320, 320}
             if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
                 // the text box has been edited, and the value has been updated
