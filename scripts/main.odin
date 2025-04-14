@@ -45,7 +45,9 @@ window_right_button_divider : i32 = 5
 header_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
 label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
 interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
-button_width:= i32(screen_width/2)-9
+button_width:= cast(i32)(((cast(f32)screen_width * 0.35)-10)*1.3)
+save_button_width:=cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
+checkbox_width:=cast(i32)(((cast(f32)screen_width*0.5)-10)*0.2)
 
 bg : [3]u8 = { 90, 95, 100 }
 
@@ -124,14 +126,15 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
-           
+        @static checks : [10000]bool = false
         defer mu.end_window(ctx)
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                                mu.layout_row(ctx, {button_width}, (screen_height / 8))
+                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height/8))
                 button_label := items.initialize_label(item)
-                                if .SUBMIT in mu.button(ctx, button_label) { 
+                mu.checkbox(ctx, "", &checks[item.id])
+                if .SUBMIT in mu.button(ctx, button_label){ 
                     fetch_item(item)
                     write_log(button_label)   
                 }
