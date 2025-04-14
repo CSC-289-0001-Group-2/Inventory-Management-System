@@ -49,8 +49,11 @@ button_width:= i32(screen_width/2)-9
 
 bg : [3]u8 = { 90, 95, 100 }
 
+// Global variables for Item Quantity (present here to avoid re-initializing the buffer every time)
 quantity_buffer := make_slice([]u8, 32)
 quantity_str_len: int = 0
+quantity_initialized: bool = false
+
 
 main :: proc() {
 
@@ -167,6 +170,7 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
 
         if len(items_selected) > 0 {
             // Item Name
+            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
             mu.label(ctx, "Item Name:")
             if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
                 mu.set_focus(ctx, ctx.last_id)
@@ -175,6 +179,7 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
             }
 
             // Item Manufacturer
+            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
             mu.label(ctx, "Item Manufacturer:")
             if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
                 mu.set_focus(ctx, ctx.last_id)
@@ -183,13 +188,14 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
             }
 
             // Item Quantity
+            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
             mu.label(ctx, "Item Quantity:")
 
-          
-            // Convert quantity (i32) to string only once when initializing
-            if quantity_str_len == 0 {
+            // Initialize the buffer only once when the window is first opened
+            if !quantity_initialized {
                 quantity_str := strconv.itoa(quantity_buffer, cast(int)(items_selected[0].quantity))
                 quantity_str_len = len(quantity_str)
+                quantity_initialized = true
             }
 
             // Use textbox for input
