@@ -12,6 +12,7 @@ import rl "vendor:raylib"
 import mu "vendor:microui"
 import win "core:sys/windows"
 import virtual "core:mem/virtual"
+import "core:strconv"
 
 
 
@@ -238,34 +239,32 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
 
             mu.label(ctx, "Item Quantity:")
 
-            // Initialize editor_input_num only once
-            if len(items_selected) > 0 && !quantity_initialized {
-                editor_input_num = cast(f32)(items_selected[0].quantity)
-                quantity_initialized = true // Mark as initialized
-            }
+            // Create a buffer and copy the string into it
+            buffer := make_slice([]u8, 32)
 
-            quantity_updated: bool = false
-            previous_editor_input_num: f32 = editor_input_num // Track the previous value
+            // Convert quantity (i32) to string and store it in the buffer
+            quantity_str := strconv.itoa(buffer, cast(int)(items_selected[0].quantity))
 
-            // Display the number textbox and handle input
-            editor_input_text_rect = mu.Rect{
-                x = 10,  // Adjust x-coordinate to fit within the Edit Window
-                y = 150, // Adjust y-coordinate to fit below other elements
-                w = 200, // Set a reasonable width
-                h = 30   // Set a reasonable height
-            }
-            if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
-                // Check if the value has actually changed
-                if editor_input_num != previous_editor_input_num {
-                    quantity_updated = true
+            // Declare quantity_str_len
+            quantity_str_len: int = len(quantity_str)
+
+            // Use textbox for input
+            if .SUBMIT in mu.textbox(ctx, buffer, &quantity_str_len) {
+                mu.set_focus(ctx, ctx.last_id)
+
+                // Convert buffer back to string and parse it as an integer
+                input_str := string(buffer[:quantity_str_len])
+                new_quantity := strconv.atoi(input_str)
+                
+                // Update the quantity if the input is valid
+                if new_quantity != 0 { // Assuming invalid input results in `0`
+                    items_selected[0].quantity = cast(i32)(new_quantity)
+                    fmt.println("Updated quantity:", items_selected[0].quantity)
+                } else {
+                    fmt.println("Invalid input for quantity:", input_str)
                 }
             }
 
-            // Update the quantity in the selected item if it was changed
-            if quantity_updated && len(items_selected) > 0 {
-                items_selected[0].quantity = cast(i32)(editor_input_num)
-                fmt.println("Updated quantity:", editor_input_num)
-            }
             fmt.println("Current editor_input_num:", editor_input_num)
             fmt.println("Current item quantity:", items_selected[0].quantity)
             // fmt.print("name text: ",strings.clone_from_bytes(editor_input_text), "\n")
