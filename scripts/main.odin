@@ -195,6 +195,7 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                 quantity_initialized = true
             }
 
+
             // Use textbox for input
             if .SUBMIT in mu.textbox(ctx, quantity_buffer, &quantity_str_len) {
                 mu.set_focus(ctx, ctx.last_id)
@@ -202,6 +203,8 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                 // Convert buffer back to string and parse it as an integer
                 input_str := string(quantity_buffer[:quantity_str_len])
                 new_quantity := strconv.atoi(input_str)
+
+
 
                 // Update the quantity if the input is valid
                 if new_quantity != 0 { // Assuming invalid input results in `0`
