@@ -234,21 +234,29 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 }
                 mu.label(ctx, strings.to_string(new_builder))
             }
+            quantity_initialized: bool = false // Add a flag to track initialization
+
             mu.label(ctx, "Item Quantity:")
 
-            if len(items_selected) > 0 && editor_input_num == 0.0 { // Only initialize if it's not already set
-                editor_input_num = cast(f32)(items_selected[0].quantity) // Initialize with the current quantity
+            // Initialize editor_input_num only once
+            if len(items_selected) > 0 && !quantity_initialized {
+                editor_input_num = cast(f32)(items_selected[0].quantity)
+                quantity_initialized = true // Mark as initialized
             }
 
-            editor_input_text_rect := mu.Rect{32, 32, 320, 320}
             quantity_updated: bool = false
+            previous_editor_input_num: f32 = editor_input_num // Track the previous value
 
+            // Display the number textbox and handle input
             if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
-                quantity_updated = true
+                // Check if the value has actually changed
+                if editor_input_num != previous_editor_input_num {
+                    quantity_updated = true
+                }
             }
 
-                // Update the quantity in the selected item
-                if quantity_updated && len(items_selected) > 0 {
+            // Update the quantity in the selected item if it was changed
+            if quantity_updated && len(items_selected) > 0 {
                 items_selected[0].quantity = cast(i32)(editor_input_num)
                 fmt.println("Updated quantity:", editor_input_num)
             }
