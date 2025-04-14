@@ -248,8 +248,12 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
             previous_editor_input_num: f32 = editor_input_num // Track the previous value
 
             // Display the number textbox and handle input
-            editor_input_text_rect = mu.Rect{32, 32, 320, 32} // x, y, width, height
-
+            editor_input_text_rect = mu.Rect{
+                x = 10,  // Adjust x-coordinate to fit within the Edit Window
+                y = 150, // Adjust y-coordinate to fit below other elements
+                w = 200, // Set a reasonable width
+                h = 30   // Set a reasonable height
+            }
             if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
                 // Check if the value has actually changed
                 if editor_input_num != previous_editor_input_num {
