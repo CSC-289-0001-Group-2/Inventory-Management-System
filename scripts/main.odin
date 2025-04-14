@@ -171,6 +171,27 @@ log_window :: proc (ctx : ^mu.Context) {
 edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
     if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
+
+        // Add a button to create a new item
+        mu.layout_row(ctx, {button_width}, (screen_height / 25))
+        if .SUBMIT in mu.button(ctx, "Add New Item") {
+            // Collect input for the new item
+            new_item_name := "New Item" // Replace with actual input from GUI
+            new_item_manufacturer := "New Manufacturer" // Replace with actual input from GUI
+            new_item_quantity := 10 // Replace with actual input from GUI
+            new_item_price := 5.99 // Replace with actual input from GUI
+
+            // Add the new item to the database
+            success := items.add_item_by_members(&db, new_item_quantity, new_item_price, new_item_name, new_item_manufacturer)
+
+            // Log the result
+            if success {
+                write_log("Added new item: " + new_item_name)
+            } else {
+                write_log("Failed to add item: " + new_item_name + " (duplicate name)")
+            }
+        }
+
         win := mu.get_current_container(ctx)
         win.rect.w = max(win.rect.w, 0)
         win.rect.w = min(win.rect.w, 0)
