@@ -44,7 +44,9 @@ window_right_button_divider : i32 = 5
 header_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
 label_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.20)
 interface_width:= cast(i32)(((cast(f32)screen_width*0.5)-10)*0.45)
-button_width:= i32(screen_width/2)-9
+button_width:= cast(i32)(((cast(f32)screen_width * 0.35)-10)*1.3)
+save_button_width:=cast(i32)(((cast(f32)screen_width*0.5)-10)*1.0)
+checkbox_width:=cast(i32)(((cast(f32)screen_width*0.5)-10)*0.2)
 
 bg : [3]u8 = { 90, 95, 100 }
 
@@ -120,7 +122,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                mu.layout_row(ctx, {button_width}, (screen_height/8))
+                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height/8))
                 button_label := items.initialize_label(item)
                 mu.checkbox(ctx, "", &checks[item.id])
                 if .SUBMIT in mu.button(ctx, button_label){ 
@@ -243,7 +245,7 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
             // fmt.print("name text: ",strings.clone_from_bytes(editor_input_text), "\n")
             padding:i32 = 50
 
-            mu.layout_row(ctx,{button_width-padding}, (screen_height/25))
+            mu.layout_row(ctx,{save_button_width-padding}, (screen_height/25))
             if .SUBMIT in mu.button(ctx, "Save Changes"){
             }
             
@@ -252,7 +254,10 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
         }  
     }
 }
-write_log :: proc(text: string) {
+write_log :: proc(text: ..string) {
+    for item in text{
+
+    }
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
         fmt.sbprint(&log_sb, "\n")
