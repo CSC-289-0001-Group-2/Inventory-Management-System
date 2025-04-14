@@ -2,7 +2,7 @@ package demo
 
 // port of micro ui c demo to odin, using rlmu as renderer
 
-import "rlmu"
+import "scripts/rlmu"
 import "core:fmt"
 import "core:strings"
 import rl "vendor:raylib"

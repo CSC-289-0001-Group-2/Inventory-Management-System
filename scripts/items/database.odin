@@ -9,21 +9,12 @@ import "core:bytes"
 import "core:bufio"
 import "base:runtime"
 import "core:mem"
+import  virtual "core:mem/virtual"
+import "core:strings"
+import "core:time"
+import "core:testing"
 
 // Global Struct Definitions
-
-// Struct for in-memory operations
-// Item :: struct {
-//     id: i32,
-//     quantity: i32,
-//     price: f32,
-//     name: string,
-//     manufacturer: string,
-// }
-
-// InventoryDatabase :: struct {
-//     items: [dynamic]Item, // Use a dynamic array instead of a slice
-// }
 
 // Function to log operations
 log_operation :: proc(operation: string, item: Item) {
@@ -41,28 +32,44 @@ find_item_by_name :: proc(db: ^InventoryDatabase, name: string) -> ^Item {
 }
 
 // Adds a new item to the inventory database.
-add_item :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
-    // Check for duplicate names using find_item_by_name
+add_item_by_members :: proc(db: ^InventoryDatabase, quantity: i32, price: f32, name: string, manufacturer: string) -> bool {
     if find_item_by_name(db, name) != nil {
         fmt.println("Error: Item with name", name, "already exists.")
         return false
     }
-
     // Create a new Item
     new_item := Item{
         id = cast(i32)(len(db.items) + 1), // Assign a unique ID based on the array length
         quantity = quantity,
         price = price,
         name = name,
+
         manufacturer = manufacturer,
     }
+
 
     // Append the new item to the items array
     append(&db.items, new_item)
 
-    fmt.println("Item successfully added: Name =", name)
+    // fmt.println("Item successfully added: Name =", name)
     return true
 }
+
+add_item_by_struct :: proc(db: ^InventoryDatabase, item : Item) -> bool {
+    // Check for duplicate names using find_item_by_name
+    if find_item_by_name(db, item.name) != nil {
+        fmt.println("Error: Item with name", item.name, "already exists.")
+        return false
+    }
+
+    // Append the new item to the items array
+    append(&db.items, item)
+
+    // fmt.println("Item successfully added: Name =", item.name)
+    return true
+}
+
+
 
 // Update the price of an item in the inventory
 update_item_price :: proc(db: ^InventoryDatabase, name: string, new_price: f32) -> bool {
@@ -118,6 +125,7 @@ sell_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> boo
     }
 
     item.quantity -= quantity
+    
     log_operation("Sold", item^)
     fmt.println("Sold", quantity, "unit(s) of", name, "- Remaining stock:", item.quantity)
     return true
@@ -141,30 +149,39 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
     return true
 }
 
+
+
 // Search for an item in the inventory database by its name and print the result
-search_item_details :: proc(db: ^InventoryDatabase, name: string) {
+search_item_details :: proc(db: ^InventoryDatabase, name: string) -> string {
+    builder := strings.Builder{}
+    strings.builder_init(&builder, context.allocator) // Initialize the builder with the default allocator
+
     item := find_item_by_name(db, name)
     if item != nil {
-        fmt.println("Item found: Name =", item.name, "Quantity =", item.quantity, "Price =", item.price, "Manufacturer =", item.manufacturer)
+        fmt.sbprintf(&builder, "Item found: Name = %s, Quantity = %d, Price = %.2f, Manufacturer = %s",
+            item.name, item.quantity, item.price, item.manufacturer)
     } else {
-        fmt.println("Item with name", name, "not found.")
+        fmt.sbprintf(&builder, "Item with name %s not found.", name)
     }
+
+    return strings.to_string(builder) // Convert the builder's contents to a string
 }
 
 
 // Method that calculates and prints the total value of the inventory
-total_value_of_inventory :: proc(db: ^InventoryDatabase) {
+total_value_of_inventory :: proc(db: ^InventoryDatabase) -> string {
+    new_builder := strings.Builder{}
+    strings.builder_init(&new_builder, context.allocator) // Initialize the builder with the default allocator
     total: f32 = 0.0
     for item in db.items {
+        // fmt.print("Item: ", item.name, " Total price: ", cast(f32)(item.quantity) * item.price, "\n")
         total += cast(f32)(item.quantity) * item.price
     }
-    fmt.println("Total Inventory Value: $", total)
+    strings.write_string(&new_builder,"Total Inventory Value: $")
+    fmt.sbprintf(&new_builder, "%.2f", total)
+    
+    return strings.to_string(new_builder) // Convert the builder's contents to a string
 }
-
-
-
-
-// You can add other serialize_* procs here, and then call any of them with just `serialize`
 
 
 // Save the inventory database to a file using bufio.Writer
@@ -191,59 +208,70 @@ save_inventory :: proc(file_name: string, database: InventoryDatabase) -> bool {
 }
 
 // Load the inventory database from a file using bufio.Reader
-load_inventory :: proc(file_name: string) -> (InventoryDatabase,bool) {
+load_inventory :: proc(file_name: string) -> (InventoryDatabase, bool) {
     data, success := os.read_entire_file_from_filename(file_name)
 
+    // Check if the file could not be opened or read
+    // If the operation fails, print an error message and return an empty database with a failure status.
     if !success {
+        // The file could not be opened or read. This might happen if:
+        // - The file does not exist.
+        // - The program does not have the necessary permissions to access the file.
+        // - There is an issue with the file system (e.g., the file is locked or corrupted).
         fmt.println("Error: Failed to open file:", file_name)
+        return InventoryDatabase{}, false
+    }
+    
+    if len(data) == 0 {
+        fmt.println("Error: File is empty:", file_name)
         return InventoryDatabase{}, false
     }
 
     return deserialize_inventory(data)
 }
 
-// Test the inventory management system
-test_inventory_system :: proc() {
-    // Create an empty InventoryDatabase
-    db: InventoryDatabase = InventoryDatabase{
-        items = make([dynamic]Item, 0), // Initialize as a dynamic array
-    }
+// Search for all items in the inventory database by manufacturer
+search_items_by_manufacturer :: proc(db: ^InventoryDatabase, manufacturer: string) -> []Item {
+    results := make([dynamic]Item, 0) // Initialize an empty dynamic array to store matching items
 
-    // Add items to the inventory
-    add_item(&db, 50, 0.99, "Apples", "FarmFresh")
-    add_item(&db, 5, 299.99, "Sword", "Camelot")
-    add_item(&db, 20, 60.00, "Skateboard", "Birdhouse")
-
-    // Save the inventory to a file
-    save_inventory("inventory.dat", db)
-
-    // Load the inventory from the file
-    loaded_db,success := load_inventory("inventory.dat")
-    if success {
-        fmt.println("Loaded Inventory:")
-        for item in loaded_db.items {
-            fmt.println("Name:", item.name, "Quantity:", item.quantity, "Price:", item.price, "Manufacturer:", item.manufacturer)
+    for item in db.items {
+        if item.manufacturer == manufacturer {
+            append(&results, item) // Add the matching item to the results array
         }
     }
 
-    // Check if an item exists before updating its quantity
-    if find_item_by_name(&db, "Apples") != nil {
-       restock_product(&db, "Apples", 10)
-    } else {
-        fmt.println("Item 'Apples' does not exist.")
+    return results[:] // Convert the dynamic array to a slice and return it
+}
+
+addBenchmark :: proc(db: ^InventoryDatabase, amount: int) {
+    for i := 0; i < amount; i += 1{
+        my_builder:= strings.builder_make()
+        strings.write_string(&my_builder,"Item - number: ")
+        strings.write_int(&my_builder, i)
+
+        item := Item{
+            id = cast(i32)i,
+            quantity = 1,
+            price = 1.0,
+            name = strings.to_string(my_builder),
+            manufacturer = "Manufacturer",
+        }
+
+        add_item_by_struct(db, item) // Add the item to the database
     }
-
-    // Update the price of an item
-    update_item_price(&db, "Sword", 249.99)
-
-    // Remove an item from the inventory
-    remove_item(&db, "Skateboard")
-
-    // Save the updated inventory to a new file
-    save_inventory("inventory_updated.dat", db)
 }
 
-// Main procedure
-main :: proc() {
-    test_inventory_system()
+
+initialize_label :: proc(item: Item) -> string {
+    my_builder:= strings.builder_make()
+    strings.write_string(&my_builder,item.name)
+    strings.write_string(&my_builder,"  x  ")
+    strings.write_int(&my_builder, cast(int)item.quantity)
+    strings.write_string(&my_builder,"       $")
+    fmt.sbprintf(&my_builder,"%.2f",item.price)
+    strings.write_string(&my_builder," total price: ")
+    strings.write_string(&my_builder,"     $")
+    fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
+    return strings.to_string(my_builder) // Convert the builder's contents to a string
 }
+
