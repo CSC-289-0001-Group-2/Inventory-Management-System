@@ -129,7 +129,7 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
                 
                 if .SUBMIT in mu.button(ctx, button_label){ 
                     fetch_item(item)
-                    write_log(button_label)   
+                    write_log("Item Selected:     ", button_label)   
                 }
             }
         } 
@@ -279,12 +279,17 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
         }  
     }
 }
-write_log :: proc(text: string) {
+write_log :: proc(text: ..string) {
+    compiled_text := ""
+    new_builder:= strings.builder_make()
+    for item in text do strings.write_string(&new_builder, item) 
+    compiled_text = strings.to_string(new_builder)
+
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
         fmt.sbprint(&log_sb, "\n")
     }
-    fmt.sbprint(&log_sb, text)
+    fmt.sbprint(&log_sb, compiled_text)
     log_updated = true
 }
 
