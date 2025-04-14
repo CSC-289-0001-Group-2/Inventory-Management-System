@@ -245,8 +245,7 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
             padding:i32 = 50
 
             mu.layout_row(ctx,{button_width-padding}, (screen_height/25))
-            if .SUBMIT in mu.button(ctx, "Confirm Edit"){ 
-
+            if .SUBMIT in mu.button(ctx, "Save Changes"){
             }
             
             
