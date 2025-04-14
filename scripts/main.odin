@@ -49,6 +49,9 @@ button_width:= i32(screen_width/2)-9
 
 bg : [3]u8 = { 90, 95, 100 }
 
+quantity_buffer := make_slice([]u8, 32)
+quantity_str_len: int = 0
+
 main :: proc() {
 
     // tests.run_all_tests()
@@ -64,7 +67,7 @@ initialize_database :: proc(){
         db := items.InventoryDatabase{
             items = make([dynamic]items.Item), // Initialize as a dynamic array
         }
-        items.addBenchmark(&db, 10000) // Add 1000 items to the database for testing
+        items.addBenchmark(&db, 10000) // Add 10,000 items to the database for testing
 
 
         defer{
@@ -158,104 +161,45 @@ log_window :: proc (ctx : ^mu.Context) {
     }
 }
 
-edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
-    if mu.begin_window(ctx, "Edit window", mu.Rect{ 0, 0, screen_width/2, screen_height/2 },{ .EXPANDED,.NO_CLOSE,.NO_RESIZE}) {
+edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
+    if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
-        win := mu.get_current_container(ctx)
-        win.rect.w = max(win.rect.w, 0)
-        win.rect.w = min(win.rect.w, 0)
-        win.rect.h = max(win.rect.h, 0)
-        win.rect.h = min(win.rect.h, 0)
-        if len(items_selected) == 0 {
-            label_width:= i32(screen_width/2)-10
-            mu.layout_row(ctx, {label_width}, (screen_height/3))
-            mu.label(ctx, "No items selected")
 
- 
-        }else
-        { //TODO: add edit functionality
-            single_item := len(items_selected) == 1
-
-            mu.layout_row(ctx, {header_width}, (screen_height/25))
-            my_builder:= strings.builder_make()
-            strings.write_string(&my_builder, "Edit Item/s: ")
-
-            for item in items_selected{
-                strings.write_string(&my_builder, " ")
-                strings.write_string(&my_builder, item.name)
-            }
-
-            mu.label(ctx, strings.to_string(my_builder))
-
-            mu.layout_row(ctx, {label_width,interface_width,label_width}, (screen_height/25))
+        if len(items_selected) > 0 {
+            // Item Name
             mu.label(ctx, "Item Name:")
-             
             if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
-                mu.set_focus(ctx, ctx.last_id)  
+                mu.set_focus(ctx, ctx.last_id)
+                items_selected[0].name = string(editor_input_text[:editor_input_text_len])
+                fmt.println("Updated name:", items_selected[0].name)
             }
-            // if editor_input_text_len > 0 {
-            //     // the text box has been edited, and the value has been updated
-            //     // you can now use the updated value
-            //     for item in items_selected{
-            //         fmt.print("item name: ", strings.clone_from_bytes(editor_input_text), "\n")
-            //     }
-            // }
-            if single_item == true{
-                mu.label(ctx, items_selected[0].name)
-            }else {
-                new_builder:= strings.builder_make()
-                strings.write_string(&new_builder, " ")
-                for item in items_selected{
-                    strings.write_string(&new_builder, item.name)
-                    strings.write_string(&new_builder, " ,")
-                    
-                }
-                mu.label(ctx, strings.to_string(new_builder))
-            }
-            for &item in db.items {
-                if is_item_selected(item) {
-                    fmt.print("item name: ", item.name, "\n")
-                }
-            }
-            
-            mu.layout_row(ctx, {label_width,interface_width,label_width}, (screen_height/25))
+
+            // Item Manufacturer
             mu.label(ctx, "Item Manufacturer:")
             if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
-                mu.set_focus(ctx, ctx.last_id)   
+                mu.set_focus(ctx, ctx.last_id)
+                items_selected[0].manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                fmt.println("Updated manufacturer:", items_selected[0].manufacturer)
             }
-            if single_item == true{
-                mu.label(ctx, items_selected[0].manufacturer)
-            }else {
-                new_builder:= strings.builder_make()
-                strings.write_string(&new_builder, " ")
-                for item in items_selected{
-                    strings.write_string(&new_builder, item.manufacturer)
-                    strings.write_string(&new_builder, " ,")
-                    
-                }
-                mu.label(ctx, strings.to_string(new_builder))
-            }
-            quantity_initialized: bool = false // Add a flag to track initialization
 
+            // Item Quantity
             mu.label(ctx, "Item Quantity:")
 
-            // Create a buffer and copy the string into it
-            buffer := make_slice([]u8, 32)
-
-            // Convert quantity (i32) to string and store it in the buffer
-            quantity_str := strconv.itoa(buffer, cast(int)(items_selected[0].quantity))
-
-            // Declare quantity_str_len
-            quantity_str_len: int = len(quantity_str)
+          
+            // Convert quantity (i32) to string only once when initializing
+            if quantity_str_len == 0 {
+                quantity_str := strconv.itoa(quantity_buffer, cast(int)(items_selected[0].quantity))
+                quantity_str_len = len(quantity_str)
+            }
 
             // Use textbox for input
-            if .SUBMIT in mu.textbox(ctx, buffer, &quantity_str_len) {
+            if .SUBMIT in mu.textbox(ctx, quantity_buffer, &quantity_str_len) {
                 mu.set_focus(ctx, ctx.last_id)
 
                 // Convert buffer back to string and parse it as an integer
-                input_str := string(buffer[:quantity_str_len])
+                input_str := string(quantity_buffer[:quantity_str_len])
                 new_quantity := strconv.atoi(input_str)
-                
+
                 // Update the quantity if the input is valid
                 if new_quantity != 0 { // Assuming invalid input results in `0`
                     items_selected[0].quantity = cast(i32)(new_quantity)
@@ -264,20 +208,9 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                     fmt.println("Invalid input for quantity:", input_str)
                 }
             }
-
-            fmt.println("Current editor_input_num:", editor_input_num)
-            fmt.println("Current item quantity:", items_selected[0].quantity)
-            // fmt.print("name text: ",strings.clone_from_bytes(editor_input_text), "\n")
-            padding:i32 = 50
-
-            mu.layout_row(ctx,{button_width-padding}, (screen_height/25))
-            if .SUBMIT in mu.button(ctx, "Confirm Edit"){ 
-
-            }
-            
-            
-
-        }  
+        } else {
+            mu.label(ctx, "No items selected")
+        }
     }
 }
 
