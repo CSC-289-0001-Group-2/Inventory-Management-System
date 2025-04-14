@@ -254,6 +254,7 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
         }  
     }
 }
+
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
