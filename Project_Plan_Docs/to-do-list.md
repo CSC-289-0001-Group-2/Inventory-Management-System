@@ -13,7 +13,6 @@
 - contributors:
   - Donovan
 
-
 #### max screen value:
 - :white_check_mark: status: DONE
 - contributors:
@@ -21,23 +20,24 @@
   - Ethan
 
 #### make inner windows scale with outer window:
-- :arrow_forward: status: ASSIGNED
+- :arrow_forward: status: SCRAPPED (using panels instead)
 - contributors:
   - CJ
   - Ethan
 
-
+#### make the fonts scale with outer window:
+- :arrow_forward: status: SCRAPPED
+- contributors:
+  - CJ
+  - Ethan
 
 ### make log window position/ scale properly to bottom left of screen
 - :white_check_mark: status: DONE
 - contributors:
   - Kameron
 
-
-### make item edit  window
-
+### make item edit window
 - :arrow_forward: status: ASSIGNED
-
 - contributors:
   - Robert
   - Donovan
@@ -46,14 +46,12 @@
 #### edit window subtasks:
 
 ##### creating the window:
-
 - :white_check_mark: status: DONE
 - contributors:
   - Donovan
 
 ##### getting the window to acknowledge item selection:
-
-- :white_check_mark: status: In-Progress
+- :arrows_counterclockwise: status: In-Progress
 - contributors:
   - Donovan
 
@@ -65,10 +63,8 @@
   - Kameron
 
 ##### add item addition/deletion button:
-
 - :no_entry_sign: status: NO-Progress
 - contributors: NONE
-
 
 ## priority 2:
 ---
