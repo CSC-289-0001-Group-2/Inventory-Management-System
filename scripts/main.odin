@@ -230,12 +230,9 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
             }
 
             mu.label(ctx, "Item Manufacturer:")
-            mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
+            mu.layout_row(ctx, {label_width/-1}, (screen_height/25))
             if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
                 mu.set_focus(ctx, ctx.last_id)
-                submitted2 = true
-            }
-            if .SUBMIT in mu.button(ctx, "Change Manufacturer") {
                 submitted2 = true
             }
             if editor_input_text_len_2 <= 0 {
@@ -272,26 +269,9 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                 editor_input_text_len_3 = 0
             }
             if .SUBMIT in mu.button(ctx, "Confirm Edits") {
-                if editor_input_text_len <= 0 || editor_input_text_len_2 <= 0 {
-                    submitted = false
-                    submitted2 = false
-                    submitted3 = false
-                }
-                if editor_input_text_len > 0 || editor_input_text_len_2 > 0 {
-                    submitted = false
-                    submitted2 = false
-                    submitted3 = true
-                }
-                if editor_input_text_len_2 <= 0 || editor_input_text_len > 0 {
-                    submitted = true
-                    submitted2 = false
-                    submitted3 = false
-                }
-                if editor_input_text_len <= 0 || editor_input_text_len_2 > 0 {
-                    submitted = false
-                    submitted2 = true
-                    submitted3 = false
-                }
+                // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
+                submitted2 = (editor_input_text_len_2 > 0)
+                submitted = (editor_input_text_len > 0 )
             }
             if submitted == true {
                 new_name = string(editor_input_text[:editor_input_text_len])
@@ -315,26 +295,26 @@ edit_window :: proc (ctx : ^mu.Context, db : items.InventoryDatabase) {
                     }
                 }
             }
-            if submitted3 == true {
-                new_name = string(editor_input_text[:editor_input_text_len])
-                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
-                write_log("Name Changed To:")
-                write_log(new_name)
-                write_log("Manufacturer Changed To:")
-                write_log(new_manufacturer)
-                editor_input_text_len = 0
-                editor_input_text_len_2 = 0
-                for &item in db.items{
-                    if is_item_selected(item){
-                        item.name = new_name
-                    }
-                }
-                for &item in db.items{
-                    if is_item_selected(item){
-                        item.manufacturer = new_manufacturer
-                }
-            }
-        }
+        //     if submitted3 == true {
+        //         new_name = string(editor_input_text[:editor_input_text_len])
+        //         new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+        //         write_log("Name Changed To:")
+        //         write_log(new_name)
+        //         write_log("Manufacturer Changed To:")
+        //         write_log(new_manufacturer)
+        //         editor_input_text_len = 0
+        //         editor_input_text_len_2 = 0
+        //         for &item in db.items{
+        //             if is_item_selected(item){
+        //                 item.name = new_name
+        //             }
+        //         }
+        //         for &item in db.items{
+        //             if is_item_selected(item){
+        //                 item.manufacturer = new_manufacturer
+        //         }
+        //     }
+        // }
             editor_input_text_rect := mu.Rect{32, 32, 320, 320}
             if mu.number_textbox(ctx, &editor_input_num, editor_input_text_rect, ctx.last_id, "%.2f") {
                 // the text box has been edited, and the value has been updated
