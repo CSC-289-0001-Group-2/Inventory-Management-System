@@ -1,6 +1,6 @@
 package main
 
-// port of micro ui c demo to odin, using rlmu as renderer
+// Port of micro UI C demo to Odin, using rlmu as the renderer
 
 import "items"
 import "tests"
@@ -14,20 +14,17 @@ import win "core:sys/windows"
 import virtual "core:mem/virtual"
 import "core:strconv"
 
-
-
+// Global variables
 log_sb := strings.builder_make()
 log_updated := false
 items_selected: [dynamic]items.Item
+file_name := "inventory.dat"
 
-file_name:= "inventory.dat"
-
+// Buffers for text input in the GUI
 log_input_text := make_slice([]u8, 128)
-log_input_text_len : int
-
+log_input_text_len: int
 editor_input_text := make_slice([]u8, 128)
-editor_input_text_len : int
-
+editor_input_text_len: int
 editor_input_text_2 := make_slice([]u8, 128)
 editor_input_text_len_2 : int
 
