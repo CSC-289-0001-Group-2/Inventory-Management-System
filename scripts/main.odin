@@ -1,10 +1,10 @@
 package main
 
-// port of micro ui c demo to odin, using rlmu as renderer
+// Port of micro UI C demo to Odin, using rlmu as the renderer
 
+// Import necessary modules
 import "items"
 import "tests"
-
 import "rlmu"
 import "core:fmt"
 import "core:strings"
@@ -14,20 +14,17 @@ import win "core:sys/windows"
 import virtual "core:mem/virtual"
 import "core:strconv"
 
-
-
+// Global variables
 log_sb := strings.builder_make()
 log_updated := false
 items_selected: [dynamic]items.Item
+file_name := "inventory.dat"
 
-file_name:= "inventory.dat"
-
+// Buffers for text input in the GUI
 log_input_text := make_slice([]u8, 128)
-log_input_text_len : int
-
+log_input_text_len: int
 editor_input_text := make_slice([]u8, 128)
-editor_input_text_len : int
-
+editor_input_text_len: int
 editor_input_text_2 := make_slice([]u8, 128)
 editor_input_text_len_2 : int
 
@@ -54,7 +51,7 @@ quantity_buffer := make_slice([]u8, 32)
 quantity_str_len: int = 0
 quantity_initialized: bool = false
 
-
+// Main entry point
 main :: proc() {
 
     // tests.run_all_tests()
@@ -63,7 +60,8 @@ main :: proc() {
 
 }
 
-initialize_database :: proc(){
+// Initializes the inventory database
+initialize_database :: proc() {
     db, success := items.load_inventory(file_name)
     if !success {
         fmt.println("Error loading inventory from file:", file_name)
@@ -109,9 +107,10 @@ initialize_window :: proc(db : items.InventoryDatabase) {
     }
 }
 
-initialize_sub_windows :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){
-    button_window(ctx,db)
-    edit_window(ctx,db)
+// Initializes all sub-windows
+initialize_sub_windows :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
+    button_window(ctx, db)
+    edit_window(ctx, db)
     log_window(ctx)  
 }
 
@@ -127,11 +126,9 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                
-                mu.layout_row(ctx, {button_width}, (screen_height/8))
+                                mu.layout_row(ctx, {button_width}, (screen_height / 8))
                 button_label := items.initialize_label(item)
-                
-                if .SUBMIT in mu.button(ctx, button_label){ 
+                                if .SUBMIT in mu.button(ctx, button_label) { 
                     fetch_item(item)
                     write_log(button_label)   
                 }
@@ -164,10 +161,10 @@ log_window :: proc (ctx : ^mu.Context) {
     }
 }
 
+// Renders the edit window
 edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
     if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
-
         if len(items_selected) > 0 {
             // Item Name
             mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
@@ -220,6 +217,7 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
     }
 }
 
+// Logs a message to the log window
 write_log :: proc(text: string) {
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
@@ -229,11 +227,13 @@ write_log :: proc(text: string) {
     log_updated = true
 }
 
-fetch_item :: proc(items_to_edit: ..items.Item){
+// Fetches an item and adds it to the selected items list
+fetch_item :: proc(items_to_edit: ..items.Item) {
     clear(&items_selected)
     for item in items_to_edit do append(&items_selected, item)
 }
 
+// Checks if an item is selected
 is_item_selected :: proc(item: items.Item) -> bool {
     for selected_item in items_selected {
         if item.id == selected_item.id {
