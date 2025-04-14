@@ -344,9 +344,10 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
             }
 
 
-        } else {
-            mu.label(ctx, "No items selected")
-        }
+        } 
+        //else {
+        //     mu.label(ctx, "No items selected")
+        // }
     }
 }
 
