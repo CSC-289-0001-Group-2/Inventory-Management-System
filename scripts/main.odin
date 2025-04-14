@@ -73,21 +73,18 @@ initialize_database :: proc() {
         db := items.InventoryDatabase{
             items = make([dynamic]items.Item), // Initialize as a dynamic array
         }
-        items.addBenchmark(&db, 10000) // Add 10,000 items to the database for testing
+        items.addBenchmark(&db, 10000) // Pass the address of `db`
 
-
-        defer{
-            initialize_window(db)
-            // fmt.print(db.items)
-        }  
-    }else {
+        defer {
+            initialize_window(&db) // Pass the address of `db`
+        }
+    } else {
         fmt.println("Loaded inventory from file:", file_name)
-        // fmt.print(db.items)
-        initialize_window(db)
+        initialize_window(&db) // Pass the address of `db`
     }
 }
 
-initialize_window :: proc(db : items.InventoryDatabase) {
+initialize_window :: proc(db : ^items.InventoryDatabase) {
     
     rl.SetWindowState({ .WINDOW_RESIZABLE})
     rl.InitWindow(screen_width, screen_height, "Inventory Managment UI")
@@ -113,8 +110,8 @@ initialize_window :: proc(db : items.InventoryDatabase) {
 }
 
 // Initializes all sub-windows
-initialize_sub_windows :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    button_window(ctx, db)
+initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
+    button_window(ctx, db^)
     edit_window(ctx, db)
     log_window(ctx)  
 }
@@ -168,7 +165,7 @@ log_window :: proc (ctx : ^mu.Context) {
 }
 
 // Renders the edit window
-edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
+edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
     if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
 
@@ -182,13 +179,24 @@ edit_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
             new_item_price := 5.99 // Replace with actual input from GUI
 
             // Add the new item to the database
-            success := items.add_item_by_members(&db, new_item_quantity, new_item_price, new_item_name, new_item_manufacturer)
+            success := items.add_item_by_members(db, cast(i32)(new_item_quantity), cast(f32)(new_item_price), new_item_name, new_item_manufacturer)
 
             // Log the result
             if success {
-                write_log("Added new item: " + new_item_name)
+                my_builder := strings.builder_make()
+                defer strings.builder_destroy(&my_builder)
+
+                strings.write_string(&my_builder, "Added new item: ")
+                strings.write_string(&my_builder, new_item_name)
+                write_log(strings.to_string(my_builder))
             } else {
-                write_log("Failed to add item: " + new_item_name + " (duplicate name)")
+                my_builder := strings.builder_make()
+                defer strings.builder_destroy(&my_builder)
+
+                strings.write_string(&my_builder, "Failed to add item: ")
+                strings.write_string(&my_builder, new_item_name)
+                strings.write_string(&my_builder, " (duplicate name)")
+                write_log(strings.to_string(my_builder))
             }
         }
 
