@@ -115,15 +115,14 @@ button_window :: proc(ctx : ^mu.Context, db : items.InventoryDatabase){ //, item
         win.rect.w = min(win.rect.w, 0)
         win.rect.h = max(win.rect.h, 0)
         win.rect.h = min(win.rect.h, 0)
-           
+        @static checks : [10000]bool = false
         defer mu.end_window(ctx)
         // fmt.print("database length: ", len(db.items), "\n")
         for item in db.items {
             if item.name != "" {
-                
                 mu.layout_row(ctx, {button_width}, (screen_height/8))
                 button_label := items.initialize_label(item)
-                
+                mu.checkbox(ctx, "", &checks[item.id])
                 if .SUBMIT in mu.button(ctx, button_label){ 
                     fetch_item(item)
                     write_log(button_label)   
