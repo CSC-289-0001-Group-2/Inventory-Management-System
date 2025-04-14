@@ -117,7 +117,7 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    checks := make([]bool, len(db.items)) // Dynamically initialize the array
+    @static checks: [10000]bool = false // Explicitly keep the size for testing
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -127,8 +127,13 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                 mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 8))
                 button_label := items.initialize_label(item)
 
-                // Safely access the `checks` array
-                mu.checkbox(ctx, "", &checks[item.id])
+                // Ensure item.id is within the valid range of the `checks` array
+                if item.id >= 0 && item.id < len(checks) {
+                    mu.checkbox(ctx, "", &checks[item.id])
+                } else {
+                    fmt.println("Warning: item.id is out of range:", item.id)
+                }
+
                 if .SUBMIT in mu.button(ctx, button_label) {
                     fetch_item(item)
                     write_log(button_label)
