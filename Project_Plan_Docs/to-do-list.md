@@ -37,7 +37,7 @@
   - Kameron
 
 ### make item edit window
-- :arrow_forward: status: ASSIGNED
+- :arrow_forward: status: DONE
 - contributors:
   - Robert
   - Donovan
@@ -56,7 +56,7 @@
   - Donovan
 
 ##### creating the edit interface:
-- :arrows_counterclockwise: status: In-Progress
+- :arrows_counterclockwise: status: DONE
 - contributors:
   - Robert
   - Donovan
