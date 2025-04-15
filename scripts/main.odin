@@ -104,7 +104,7 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    @static checks: [10000]bool = false // Explicitly keep the size for testing
+    @static checks: [20000]bool = false // Increase during testing. Current is 20,000 items.
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -187,6 +187,9 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                 strings.write_string(&my_builder, new_item_name)
                 strings.write_string(&my_builder, " (duplicate name)")
                 write_log(strings.to_string(my_builder))
+                
+                mu.layout_row(ctx, {button_width}, (screen_height / 25))
+                mu.label(ctx, "Error: Item with this name already exists!")
             }
         }
 
