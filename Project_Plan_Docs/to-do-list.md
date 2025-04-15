@@ -62,7 +62,11 @@
   - Donovan
   - Kameron
 
-##### add item addition/deletion button:
+##### add item button:
+- :no_entry_sign: status: in-Progress
+- contributors: CJ
+
+##### delete item button:
 - :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
