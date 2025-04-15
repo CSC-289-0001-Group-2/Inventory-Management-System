@@ -104,7 +104,7 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    @static checks: [10000]bool = false // Explicitly keep the size for testing
+    @static checks: [20000]bool = false // Increase during testing. Current is 20,000 items.
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -167,26 +167,33 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             new_item_manufacturer := "New Manufacturer" // Replace with actual input from GUI
             new_item_quantity := 10 // Replace with actual input from GUI
             new_item_price := 5.99 // Replace with actual input from GUI
-
-            // Add the new item to the database
-            success := items.add_item_by_members(db, cast(i32)(new_item_quantity), cast(f32)(new_item_price), new_item_name, new_item_manufacturer)
-
-            // Log the result
-            if success {
-                my_builder := strings.builder_make()
-                defer strings.builder_destroy(&my_builder)
-
-                strings.write_string(&my_builder, "Added new item: ")
-                strings.write_string(&my_builder, new_item_name)
-                write_log(strings.to_string(my_builder))
+            // Input validation. Currently not accessible by GUI because of how Add New Item button works.
+            if new_item_name == "" {
+                write_log("Error: Item name cannot be empty.")
+            } else if new_item_quantity <= 0 {
+                write_log("Error: Quantity must be greater than zero.")
             } else {
-                my_builder := strings.builder_make()
-                defer strings.builder_destroy(&my_builder)
+                success := items.add_item_by_members(db, cast(i32)(new_item_quantity), cast(f32)(new_item_price), new_item_name, new_item_manufacturer)
+                // Handle success or failure
+                if success {
+                    my_builder := strings.builder_make()
+                    defer strings.builder_destroy(&my_builder)
 
-                strings.write_string(&my_builder, "Failed to add item: ")
-                strings.write_string(&my_builder, new_item_name)
-                strings.write_string(&my_builder, " (duplicate name)")
-                write_log(strings.to_string(my_builder))
+                    strings.write_string(&my_builder, "Added new item: ")
+                    strings.write_string(&my_builder, new_item_name)
+                    write_log(strings.to_string(my_builder))
+                } else {
+                    my_builder := strings.builder_make()
+                    defer strings.builder_destroy(&my_builder)
+
+                    strings.write_string(&my_builder, "Failed to add item: ")
+                    strings.write_string(&my_builder, new_item_name)
+                    strings.write_string(&my_builder, " (duplicate name)")
+                    write_log(strings.to_string(my_builder))
+                    
+                    mu.layout_row(ctx, {button_width}, (screen_height / 25))
+                    mu.label(ctx, "Error: Item with this name already exists!")
+                }
             }
         }
 
