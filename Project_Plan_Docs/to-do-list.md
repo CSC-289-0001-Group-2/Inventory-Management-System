@@ -86,9 +86,13 @@
 
 
   5. delete bulk items:
-    - :no_entry_sign: status: NO-Progress
+    - :arrows_counterclockwise: status: In-Progress
     - contributors: 
       - Robert
+
+  6. cleanup:
+      - :no_entry_sign: status: NO-Progress
+      - contributors: NONE
 
 ##### add item button:
 - :arrow_forward: in-Progress
