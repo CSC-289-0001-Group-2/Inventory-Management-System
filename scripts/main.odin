@@ -42,7 +42,7 @@ window_right_button_divider: i32 = 5
 header_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
 label_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.20)
 interface_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.45)
-button_width := cast(i32)(((cast(f32)screen_width * 0.35) - 10) * 1.3)
+button_width := cast(i32)(((cast(f32)screen_width * 0.35) - 10) * 1.0)
 save_button_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
 checkbox_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.2)
 
@@ -94,6 +94,9 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
 
         initialize_sub_windows(ctx, db)
     }
+    if rl.WindowShouldClose(){
+        items.save_inventory(file_name, db^) // Save the inventory to the file
+    }
 }
 
 // Initializes all sub-windows
@@ -111,7 +114,7 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
 
         for item in db.items {
             if item.name != "" {
-                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 8))
+                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 15))
                 button_label := items.initialize_label(item)
 
                 // Ensure item.id is within the valid range of the `checks` array

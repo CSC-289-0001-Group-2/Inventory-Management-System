@@ -63,7 +63,7 @@
   - Kameron
 
 ##### add item button:
-- :no_entry_sign: status: in-Progress
+- :arrow_forward: in-Progress
 - contributors: CJ
 
 ##### delete item button:
