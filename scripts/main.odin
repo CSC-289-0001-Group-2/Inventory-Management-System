@@ -266,6 +266,13 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                     items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
                 }
             }
+
+            // Remove Button
+            mu.layout_row(ctx, {button_width}, screen_height / 25)
+            if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
+                ordered_remove(&items_selected, )
+                write_log("Item(s) removed")
+            }
         } else {
             mu.layout_row(ctx, {label_width}, (screen_height / 3))
             mu.label(ctx, "No items selected")
