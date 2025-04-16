@@ -269,6 +269,38 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             mu.layout_row(ctx, {label_width}, (screen_height / 3))
             mu.label(ctx, "No items selected")
         }
+        submitted := false
+        submitted2 := false
+        new_name := ""
+        new_manufacturer := ""
+        mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
+            if .SUBMIT in mu.button(ctx, "Confirm Edits") {
+                // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
+                submitted2 = (editor_input_text_len_2 > 0)
+                submitted = (editor_input_text_len > 0 )
+            }
+            if submitted == true {
+                new_name = string(editor_input_text[:editor_input_text_len])
+                write_log("Name Changed To:")
+                write_log(new_name)
+                editor_input_text_len = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.name = new_name
+                    }
+                }
+            }
+            if submitted2 == true {
+                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                write_log("Manufacturer Changed To:")
+                write_log(new_manufacturer)
+                editor_input_text_len_2 = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.manufacturer = new_manufacturer
+                    }
+                }
+            }
     }
 }
 
