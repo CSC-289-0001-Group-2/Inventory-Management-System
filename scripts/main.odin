@@ -270,12 +270,15 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             // Remove Button
             mu.layout_row(ctx, {button_width}, screen_height / 25)
             if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
-                for &items, i in items_selected{
-                    if is_item_selected(items){
+                for &item, i in items_selected{
+                    if is_item_selected(item){
                         if i < len(items_selected){
-                            ordered_remove(&items_selected, i)
-                            ordered_remove(db, )
-                            write_log("Removed items :", )
+                            write_log("Removed items :", item.name)
+                            defer{
+                                ordered_remove(&items_selected, i)
+                                ordered_remove(&db.items, items.find_item_index(db, item))
+                            }
+
                         }
                     }
                 }
@@ -323,3 +326,4 @@ is_item_selected :: proc(item: items.Item) -> bool {
     }
     return false
 }
+

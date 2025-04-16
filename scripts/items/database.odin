@@ -275,3 +275,11 @@ initialize_label :: proc(item: Item) -> string {
     return strings.to_string(my_builder) // Convert the builder's contents to a string
 }
 
+find_item_index:: proc(db: ^InventoryDatabase, item :Item) -> int{
+    for item, i in db.items {
+        if item.id == item.id{
+            return i
+        }
+    }
+    return -1
+}
