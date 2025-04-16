@@ -274,6 +274,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                     if is_item_selected(items){
                         if i < len(items_selected){
                             ordered_remove(&items_selected, i)
+                            ordered_remove(db, )
                             write_log("Removed items :", )
                         }
                     }
