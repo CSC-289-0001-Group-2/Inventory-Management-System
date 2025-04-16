@@ -288,6 +288,8 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             }
             submitted := false
             submitted2 := false
+            submitted3 := false
+            
 
             new_name := ""
             new_manufacturer := ""
@@ -296,6 +298,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                     // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
                     submitted2 = (editor_input_text_len_2 > 0)
                     submitted = (editor_input_text_len > 0 )
+                    submitted3 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0)
                 }
                 if submitted == true {
                     new_name = string(editor_input_text[:editor_input_text_len])
