@@ -271,8 +271,8 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             mu.layout_row(ctx, {button_width}, screen_height / 25)
             if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
                 for &items in items_selected{
-                    if is_item_selected{
-                        ordered_remove(&items_selected, items)
+                    if is_item_selected(items){
+                        ordered_remove(&items_selected, items.id)
                         write_log("Removed item(s)")
                     }
                 }
