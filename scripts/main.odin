@@ -43,6 +43,7 @@ header_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
 label_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.20)
 interface_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.45)
 button_width := cast(i32)(((cast(f32)screen_width * 0.35) - 10) * 1.0)
+edit_button_width := cast(i32)(((cast(f32)screen_width * 0.45) - 10) * 1.0)
 save_button_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
 checkbox_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.2)
 
@@ -187,7 +188,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
         defer mu.end_window(ctx)
 
         // Add a button to create a new item
-        mu.layout_row(ctx, {button_width}, (screen_height / 25))
+        mu.layout_row(ctx, {edit_button_width}, (screen_height / 25))
         if .SUBMIT in mu.button(ctx, "Add New Item") {
             is_adding_new_item = true
             selected_item_index = -1
@@ -225,6 +226,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                         strings.write_string(&my_builder, "Added new item: ")
                         strings.write_string(&my_builder, new_item_name)
                         write_log(strings.to_string(my_builder))
+                        save_data(db)
                     } else {
                         my_builder := strings.builder_make()
                         defer strings.builder_destroy(&my_builder)
@@ -293,7 +295,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 
             new_name := ""
             new_manufacturer := ""
-            mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
+            mu.layout_row(ctx, {edit_button_width, interface_width/5}, (screen_height/25))
                 if .SUBMIT in mu.button(ctx, "Confirm Edits") {
                     // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
                     submitted2 = (editor_input_text_len_2 > 0)
