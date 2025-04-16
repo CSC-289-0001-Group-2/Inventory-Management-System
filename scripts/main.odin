@@ -181,44 +181,66 @@ log_window :: proc(ctx: ^mu.Context) {
 
 // Renders the edit window
 edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
+    @static is_adding_new_item: bool = false
+    @static selected_item_index: int = -1
+
     if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
 
         // Add a button to create a new item
         mu.layout_row(ctx, {button_width}, (screen_height / 25))
         if .SUBMIT in mu.button(ctx, "Add New Item") {
-            // Collect input for the new item
-            new_item_name := "New Item" // Replace with actual input from GUI
-            new_item_manufacturer := "New Manufacturer" // Replace with actual input from GUI
-            new_item_quantity := 10 // Replace with actual input from GUI
-            new_item_price := 5.99 // Replace with actual input from GUI
-            // Input validation. Currently not accessible by GUI because of how Add New Item button works.
-            if new_item_name == "" {
-                write_log("Error: Item name cannot be empty.")
-            } else if new_item_quantity <= 0 {
-                write_log("Error: Quantity must be greater than zero.")
-            } else {
-                success := items.add_item_by_members(db, cast(i32)(new_item_quantity), cast(f32)(new_item_price), new_item_name, new_item_manufacturer)
-                // Handle success or failure
-                if success {
-                    my_builder := strings.builder_make()
-                    defer strings.builder_destroy(&my_builder)
+            is_adding_new_item = true
+            selected_item_index = -1
+        }
 
-                    strings.write_string(&my_builder, "Added new item: ")
-                    strings.write_string(&my_builder, new_item_name)
-                    write_log(strings.to_string(my_builder))
+        if is_adding_new_item {
+            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+            mu.label(ctx, "Item Name:")
+            mu.textbox(ctx, editor_input_text, &editor_input_text_len)
+
+            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+            mu.label(ctx, "Manufacturer:")
+            mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2)
+
+            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+            mu.label(ctx, "Quantity:")
+            mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3)
+
+            mu.layout_row(ctx, {button_width}, (screen_height / 25))
+            if .SUBMIT in mu.button(ctx, "Confirm") {
+                new_item_name := string(editor_input_text[:editor_input_text_len])
+                new_item_manufacturer := string(editor_input_text_2[:editor_input_text_len_2])
+                new_item_quantity := cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
+
+                if new_item_name == "" {
+                    write_log("Error: Item name cannot be empty.")
+                } else if new_item_quantity <= 0 {
+                    write_log("Error: Quantity must be greater than zero.")
                 } else {
-                    my_builder := strings.builder_make()
-                    defer strings.builder_destroy(&my_builder)
+                    success := items.add_item_by_members(db, new_item_quantity, 0.0, new_item_name, new_item_manufacturer)
+                    if success {
+                        my_builder := strings.builder_make()
+                        defer strings.builder_destroy(&my_builder)
 
-                    strings.write_string(&my_builder, "Failed to add item: ")
-                    strings.write_string(&my_builder, new_item_name)
-                    strings.write_string(&my_builder, " (duplicate name)")
-                    write_log(strings.to_string(my_builder))
-                    
-                    mu.layout_row(ctx, {button_width}, (screen_height / 25))
-                    mu.label(ctx, "Error: Item with this name already exists!")
+                        strings.write_string(&my_builder, "Added new item: ")
+                        strings.write_string(&my_builder, new_item_name)
+                        write_log(strings.to_string(my_builder))
+                    } else {
+                        my_builder := strings.builder_make()
+                        defer strings.builder_destroy(&my_builder)
+
+                        strings.write_string(&my_builder, "Error: Item with this name already exists: ")
+                        strings.write_string(&my_builder, new_item_name)
+                        write_log(strings.to_string(my_builder))
+                    }
                 }
+
+                // Reset state
+                is_adding_new_item = false
+                editor_input_text_len = 0
+                editor_input_text_len_2 = 0
+                editor_input_text_len_3 = 0
             }
         }
 
@@ -265,19 +287,17 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                     items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
                 }
             }
-        } else {
-            mu.layout_row(ctx, {label_width}, (screen_height / 3))
-            mu.label(ctx, "No items selected")
-        }
-        submitted := false
-        submitted2 := false
-        new_name := ""
-        new_manufacturer := ""
-        mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
+            submitted := false
+            submitted2 := false
+            submitted3 := false
+            new_name := ""
+            new_manufacturer := ""
+            mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
             if .SUBMIT in mu.button(ctx, "Confirm Edits") {
                 // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
                 submitted2 = (editor_input_text_len_2 > 0)
                 submitted = (editor_input_text_len > 0 )
+                submitted3 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0)
             }
             if submitted == true {
                 new_name = string(editor_input_text[:editor_input_text_len])
@@ -289,6 +309,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                         item.name = new_name
                     }
                 }
+                clear(&items_selected)
             }
             if submitted2 == true {
                 new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
@@ -300,7 +321,16 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                         item.manufacturer = new_manufacturer
                     }
                 }
+                clear(&items_selected)
             }
+            if submitted3 == true {
+                write_log("Error: No inputs found")
+                clear(&items_selected)
+            }
+        } else {
+            mu.layout_row(ctx, {label_width}, (screen_height / 3))
+            mu.label(ctx, "No items selected")
+        }
     }
 }
 
