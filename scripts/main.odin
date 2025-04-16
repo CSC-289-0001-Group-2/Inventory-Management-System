@@ -94,7 +94,7 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
 
         initialize_sub_windows(ctx, db)
     }
-    
+
     if rl.WindowShouldClose(){
         items.save_inventory(file_name, db^) // Save the inventory to the file
         fmt.println("data saved to file: ", file_name)
@@ -121,7 +121,27 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
 
                 // Ensure item.id is within the valid range of the `checks` array
                 if item.id >= 0 && item.id < len(checks) {
-                    mu.checkbox(ctx, "", &checks[item.id])
+                    if .CHANGE in mu.checkbox(ctx, "", &checks[item.id]){
+                        if checks[item.id] {
+                            
+                            if !is_item_selected(item){
+                                append(&items_selected,item)
+                                write_log("Item selected:", item.name)
+                            }
+                        } else{
+                            if is_item_selected(item){
+                                for selected_item, i in items_selected{
+                                    if item.id == selected_item.id{
+                                        if i < len(items_selected){
+                                            ordered_remove(&items_selected,i)
+                                            write_log("Item deselected:", item.name)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                   }
+
                 } else {
                     fmt.println("Warning: item.id is out of range:", item.id)
                 }
@@ -130,6 +150,7 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                     fetch_item(item)
                     write_log(button_label)
                 }
+
             }
         }
     }
@@ -253,21 +274,32 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 // Logs a message to the log window
-write_log :: proc(text: string) {
+write_log :: proc(text: ..string) {
+    new_builder := strings.builder_make()
+    defer strings.builder_destroy(&new_builder)
+    for segment in text do strings.write_string(&new_builder, segment)
+    comp_text := strings.to_string(new_builder)
     if strings.builder_len(log_sb) != 0 {
         // Append newline if log isn't empty
         fmt.sbprint(&log_sb, "\n")
     }
-    fmt.sbprint(&log_sb, text)
+    fmt.sbprint(&log_sb, comp_text)
     log_updated = true
 }
-
+fetch_item ::proc{ fetch_item_ind,fetch_items_by_array}
 // Fetches an item and adds it to the selected items list
-fetch_item :: proc(items_to_edit: ..items.Item) {
+fetch_item_ind :: proc(items_to_edit: ..items.Item) {
     clear(&items_selected)
     for item in items_to_edit do append(&items_selected, item)
 }
 
+fetch_items_by_array :: proc(items_to_edit: [dynamic]items.Item) {
+    clear(&items_selected)
+    for item in items_to_edit {
+        append(&items_selected, item)
+        fmt.println("Item added to selected items:", item.name)
+    }
+}
 // Checks if an item is selected
 is_item_selected :: proc(item: items.Item) -> bool {
     for selected_item in items_selected {
