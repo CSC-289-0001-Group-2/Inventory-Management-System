@@ -52,6 +52,7 @@ bg: [3]u8 = {90, 95, 100}
 quantity_buffer := make_slice([]u8, 32)
 quantity_str_len: int = 0
 quantity_initialized: bool = false
+checks: [20000]bool = false
 
 // Main entry point
 main :: proc() {
@@ -96,8 +97,7 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     }
 
     if rl.WindowShouldClose(){
-        items.save_inventory(file_name, db^) // Save the inventory to the file
-        fmt.println("data saved to file: ", file_name)
+        save_data(db)
     }
 }
 
@@ -109,7 +109,7 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    @static checks: [20000]bool = false // Increase during testing. Current is 20,000 items.
+     // Increase during testing. Current is 20,000 items.
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -141,12 +141,11 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                             }
                         }
                    }
-
                 } else {
                     fmt.println("Warning: item.id is out of range:", item.id)
                 }
-
                 if .SUBMIT in mu.button(ctx, button_label) {
+                    clear_selected_items()
                     fetch_item(item)
                     write_log(button_label)
                 }
@@ -289,44 +288,45 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             }
             submitted := false
             submitted2 := false
-            submitted3 := false
+
             new_name := ""
             new_manufacturer := ""
             mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
-            if .SUBMIT in mu.button(ctx, "Confirm Edits") {
-                // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
-                submitted2 = (editor_input_text_len_2 > 0)
-                submitted = (editor_input_text_len > 0 )
-                submitted3 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0)
-            }
-            if submitted == true {
-                new_name = string(editor_input_text[:editor_input_text_len])
-                write_log("Name Changed To:")
-                write_log(new_name)
-                editor_input_text_len = 0
-                for &item in db.items{
-                    if is_item_selected(item){
-                        item.name = new_name
+                if .SUBMIT in mu.button(ctx, "Confirm Edits") {
+                    // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
+                    submitted2 = (editor_input_text_len_2 > 0)
+                    submitted = (editor_input_text_len > 0 )
+                }
+                if submitted == true {
+                    new_name = string(editor_input_text[:editor_input_text_len])
+                    write_log("Name Changed To:")
+                    write_log(new_name)
+                    editor_input_text_len = 0
+                    for &item in db.items{
+                        if is_item_selected(item){
+                            item.name = new_name
+                        }
                     }
                 }
-                clear(&items_selected)
-            }
-            if submitted2 == true {
-                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
-                write_log("Manufacturer Changed To:")
-                write_log(new_manufacturer)
-                editor_input_text_len_2 = 0
-                for &item in db.items{
-                    if is_item_selected(item){
-                        item.manufacturer = new_manufacturer
+                if submitted2 == true {
+                    new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                    write_log("Manufacturer Changed To:")
+                    write_log(new_manufacturer)
+                    editor_input_text_len_2 = 0
+                    for &item in db.items{
+                        if is_item_selected(item){
+                            item.manufacturer = new_manufacturer
+                        }
                     }
                 }
-                clear(&items_selected)
-            }
-            if submitted3 == true {
+
+                if submitted3 == true {
                 write_log("Error: No inputs found")
                 clear(&items_selected)
-            }
+                }
+                 defer if submitted == true || submitted2 == true{
+                    save_data(db)
+                }
         } else {
             mu.layout_row(ctx, {label_width}, (screen_height / 3))
             mu.label(ctx, "No items selected")
@@ -369,4 +369,17 @@ is_item_selected :: proc(item: items.Item) -> bool {
         }
     }
     return false
+}
+
+
+save_data :: proc(db: ^items.InventoryDatabase){
+    items.save_inventory(file_name, db^) // Save the inventory to the file
+    write_log("data saved to file: ", file_name)// Pass the address of `db`
+}
+
+clear_selected_items :: proc(){
+    clear(&items_selected)
+    for &check in checks{
+        check = false
+    }
 }
