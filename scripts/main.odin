@@ -96,6 +96,7 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     }
     if rl.WindowShouldClose(){
         items.save_inventory(file_name, db^) // Save the inventory to the file
+        fmt.println("data saved to file: ", file_name)
     }
 }
 
