@@ -62,6 +62,34 @@
   - Donovan
   - Kameron
 
+- Subtasks:
+  1. edit bulk items:
+    - :arrows_counterclockwise: status: In-Progress
+    - contributors:
+      - Robert
+      - Donovan
+
+  2. get the add item button to open a new interface in the edit window:
+    - :no_entry_sign: status: NO-Progress
+    - contributors: 
+      - NONE
+
+  3. get the add item interface to be functional:
+    - :no_entry_sign: status: NO-Progress
+    - contributors: 
+      - NONE
+  
+  4. delete individual items:
+    - :no_entry_sign: status: NO-Progress
+    - contributors: 
+      - NONE
+
+
+  5. delete bulk items:
+    - :no_entry_sign: status: NO-Progress
+    - contributors: 
+      - NONE
+
 ##### add item button:
 - :arrow_forward: in-Progress
 - contributors: CJ
