@@ -58,7 +58,7 @@ main :: proc() {
     // tests.run_all_tests()
     initialize_database()
     // Initialize the window and start the main loop
-}
+};
 
 // Initializes the inventory database
 initialize_database :: proc() {
@@ -66,7 +66,7 @@ initialize_database :: proc() {
     if !success {
         fmt.println("Error loading inventory from file:", file_name)
         db := items.InventoryDatabase{
-            items = make([dynamic]items.Item), // Initialize as a dynamic array
+            items = make([dynamic]items.Item), // Ensure this is a dynamic array of items.Item
         }
         items.addBenchmark(&db, 10000) // Pass the address of `db`
 
@@ -93,11 +93,10 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
         rlmu.begin_scope() // same as calling, `rlmu.begin(); defer rlmu.end()`
 
         initialize_sub_windows(ctx, db)
-    }
-    
-    if rl.WindowShouldClose(){
-        items.save_inventory(file_name, db^) // Save the inventory to the file
-        fmt.println("data saved to file: ", file_name)
+        if rl.WindowShouldClose() {
+            items.save_inventory(file_name, db^) // Save the inventory to the file
+            fmt.println("data saved to file: ", file_name)
+        }
     }
 }
 
@@ -109,26 +108,35 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    @static checks: [20000]bool = false // Increase during testing. Current is 20,000 items.
+    @static checks: [20000]bool = false; // Increase during testing. Current is 20,000 items.
+    @static selected_item_index: int = -1; // Tracks the currently selected item index
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
-        defer mu.end_window(ctx)
+        defer mu.end_window(ctx);
 
-        for item in db.items {
+        for i in 0..<len(db.items) {
+            item := db.items[i];
             if item.name != "" {
-                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 15))
-                button_label := items.initialize_label(item)
-
+                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 15));
+                button_label := item.name; // Use item.name directly as the button label
+        
                 // Ensure item.id is within the valid range of the `checks` array
                 if item.id >= 0 && item.id < len(checks) {
-                    mu.checkbox(ctx, "", &checks[item.id])
+                    mu.checkbox(ctx, "", &checks[item.id]);
                 } else {
-                    fmt.println("Warning: item.id is out of range:", item.id)
+                    fmt.println("Warning: item.id is out of range:", item.id);
                 }
-
+        
+                // Handle item button click
                 if .SUBMIT in mu.button(ctx, button_label) {
-                    fetch_item(item)
-                    write_log(button_label)
+                    selected_item_index = i; // Set the selected item index
+                    fetch_item(item);       // Fetch the selected item
+                    my_builder := strings.builder_make()
+                    defer strings.builder_destroy(&my_builder)
+
+                    strings.write_string(&my_builder, "Selected item: ")
+                    strings.write_string(&my_builder, item.name)
+                    write_log(strings.to_string(my_builder))
                 }
             }
         }
@@ -278,17 +286,17 @@ write_log :: proc(text: string) {
 }
 
 // Fetches an item and adds it to the selected items list
-fetch_item :: proc(items_to_edit: ..items.Item) {
-    clear(&items_selected)
-    for item in items_to_edit do append(&items_selected, item)
+fetch_item :: proc(item_to_edit: items.Item) {
+    clear(&items_selected);
+    append(&items_selected, item_to_edit);
 }
 
 // Checks if an item is selected
 is_item_selected :: proc(item: items.Item) -> bool {
     for selected_item in items_selected {
         if item.id == selected_item.id {
-            return true
+            return true;
         }
     }
-    return false
+    return false;
 }
