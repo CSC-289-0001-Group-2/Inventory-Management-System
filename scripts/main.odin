@@ -129,9 +129,15 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                                 write_log("Item selected:", item.name)
                             }
                         } else{
-                            
                             if is_item_selected(item){
-                                write_log("Item deselected:", item.name)
+                                for selected_item, i in items_selected{
+                                    if item.id == selected_item.id{
+                                        if i < len(items_selected){
+                                            ordered_remove(&items_selected,i)
+                                            write_log("Item deselected:", item.name)
+                                        }
+                                    }
+                                }
                             }
                         }
                    }
