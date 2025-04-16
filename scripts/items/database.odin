@@ -275,6 +275,8 @@ addBenchmark :: proc(db: ^InventoryDatabase, amount: int) {
 
 initialize_label :: proc(item: Item) -> string {
     my_builder:= strings.builder_make()
+    strings.write_int(&my_builder,cast(int)item.id)
+    strings.write_string(&my_builder,"  :id  ")
     strings.write_string(&my_builder,item.name)
     strings.write_string(&my_builder,"  x  ")
     strings.write_int(&my_builder, cast(int)item.quantity)
