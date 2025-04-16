@@ -104,10 +104,6 @@
 - :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
-### add bulk actions (selecting multiple items to edit, or delete)
-- :no_entry_sign: status: NO-Progress
-- contributors: NONE
-
 ## priority 3:
 ---
 ### import/export?
