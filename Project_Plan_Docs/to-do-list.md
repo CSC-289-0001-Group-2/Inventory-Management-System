@@ -82,7 +82,7 @@
   4. delete individual items:
     - :no_entry_sign: status: NO-Progress
     - contributors: 
-      - NONE
+      - Ethan
 
 
   5. delete bulk items:
