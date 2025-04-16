@@ -150,7 +150,6 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                     fetch_item(item)
                     write_log(button_label)
                 }
-
             }
         }
     }
