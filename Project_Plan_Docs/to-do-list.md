@@ -70,17 +70,17 @@
       - Donovan
 
   2. get the add item button to open a new interface in the edit window:
-    - :no_entry_sign: status: NO-Progress
+    - :arrows_counterclockwise: status: In-Progress
     - contributors: 
-      - NONE
+      - CJ
 
   3. get the add item interface to be functional:
-    - :no_entry_sign: status: NO-Progress
+    - :arrows_counterclockwise: status: In-Progress
     - contributors: 
-      - NONE
+      - CJ
   
   4. delete individual items:
-    - :no_entry_sign: status: NO-Progress
+    - :arrows_counterclockwise: status: In-Progress
     - contributors: 
       - Ethan
 
@@ -88,7 +88,7 @@
   5. delete bulk items:
     - :no_entry_sign: status: NO-Progress
     - contributors: 
-      - NONE
+      - Robert
 
 ##### add item button:
 - :arrow_forward: in-Progress
