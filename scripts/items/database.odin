@@ -107,6 +107,7 @@ remove_item :: proc(db: ^InventoryDatabase, name: string) -> bool {
     return false
 }
 
+
 sell_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> bool {
     if quantity <= 0 {
         fmt.println("Error: You can't sell nothing!")
@@ -148,6 +149,16 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
     fmt.println("Restocked", quantity, "unit(s) of", name, "Previous stock", item.quantity - quantity, "- New stock:", item.quantity)
     return true
 }
+
+find_item_index:: proc(db: ^InventoryDatabase, item :Item) -> int{
+    for item, i in db.items {
+        if item.id == item.id{
+            return i
+        }
+    }
+    return -1
+}
+
 
 
 
@@ -272,6 +283,8 @@ initialize_label :: proc(item: Item) -> string {
     strings.write_string(&my_builder," total price: ")
     strings.write_string(&my_builder,"     $")
     fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
+    strings.write_string(&my_builder,"    ")
+    strings.write_string(&my_builder,item.manufacturer)
     return strings.to_string(my_builder) // Convert the builder's contents to a string
 }
 

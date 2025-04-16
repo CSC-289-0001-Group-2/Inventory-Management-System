@@ -96,8 +96,7 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     }
 
     if rl.WindowShouldClose(){
-        items.save_inventory(file_name, db^) // Save the inventory to the file
-        fmt.println("data saved to file: ", file_name)
+        save_data(db)
     }
 }
 
@@ -265,42 +264,46 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                     items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
                 }
             }
+            submitted := false
+            submitted2 := false
+            new_name := ""
+            new_manufacturer := ""
+            mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
+                if .SUBMIT in mu.button(ctx, "Confirm Edits") {
+                    // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
+                    submitted2 = (editor_input_text_len_2 > 0)
+                    submitted = (editor_input_text_len > 0 )
+                }
+                if submitted == true {
+                    new_name = string(editor_input_text[:editor_input_text_len])
+                    write_log("Name Changed To:")
+                    write_log(new_name)
+                    editor_input_text_len = 0
+                    for &item in db.items{
+                        if is_item_selected(item){
+                            item.name = new_name
+                        }
+                    }
+                }
+                if submitted2 == true {
+                    new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                    write_log("Manufacturer Changed To:")
+                    write_log(new_manufacturer)
+                    editor_input_text_len_2 = 0
+                    for &item in db.items{
+                        if is_item_selected(item){
+                            item.manufacturer = new_manufacturer
+                        }
+                    }
+                }
+                defer if submitted == true || submitted2 == true{
+                    save_data(db)
+                }
         } else {
             mu.layout_row(ctx, {label_width}, (screen_height / 3))
             mu.label(ctx, "No items selected")
         }
-        submitted := false
-        submitted2 := false
-        new_name := ""
-        new_manufacturer := ""
-        mu.layout_row(ctx, {label_width/-1, interface_width/5}, (screen_height/25))
-            if .SUBMIT in mu.button(ctx, "Confirm Edits") {
-                // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
-                submitted2 = (editor_input_text_len_2 > 0)
-                submitted = (editor_input_text_len > 0 )
-            }
-            if submitted == true {
-                new_name = string(editor_input_text[:editor_input_text_len])
-                write_log("Name Changed To:")
-                write_log(new_name)
-                editor_input_text_len = 0
-                for &item in db.items{
-                    if is_item_selected(item){
-                        item.name = new_name
-                    }
-                }
-            }
-            if submitted2 == true {
-                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
-                write_log("Manufacturer Changed To:")
-                write_log(new_manufacturer)
-                editor_input_text_len_2 = 0
-                for &item in db.items{
-                    if is_item_selected(item){
-                        item.manufacturer = new_manufacturer
-                    }
-                }
-            }
+
     }
 }
 
@@ -339,4 +342,14 @@ is_item_selected :: proc(item: items.Item) -> bool {
         }
     }
     return false
+}
+
+
+save_data :: proc(db: ^items.InventoryDatabase){
+    items.save_inventory(file_name, db^) // Save the inventory to the file
+    write_log("data saved to file: ", file_name)// Pass the address of `db`
+}
+
+clear_selected_items :: proc(){
+    clear(&items_selected)
 }
