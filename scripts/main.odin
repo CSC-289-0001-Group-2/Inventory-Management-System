@@ -206,7 +206,27 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                  
                 
 
+            }            // Item Quantity
+              mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+              mu.label(ctx, "Item Quantity:")
+              if .SUBMIT in mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3) {
+                mu.set_focus(ctx, ctx.last_id)
+                if single_item {
+                    items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
+                }
             }
+
+            // Remove Button
+            mu.layout_row(ctx, {button_width}, screen_height / 25)
+            if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
+                delete_bulk_items(&items_selected, db)
+            }
+        } else {
+            mu.layout_row(ctx, {label_width}, (screen_height / 3))
+            mu.label(ctx, "No items selected")
+        }
+    }
+}
             
             clear_selected_items()
         }
@@ -364,9 +384,6 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
 
 }
 
-
-
-
 // Logs a message to the log window
 write_log :: proc(text: ..string) {
     new_builder := strings.builder_make()
@@ -404,6 +421,22 @@ is_item_selected :: proc(item: items.Item) -> bool {
     return false
 }
 
+delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.InventoryDatabase){
+    if len(items_to_delete) <= 0{
+        return
+    } else{
+        for &item, i in items_to_delete{
+            if is_item_selected(item){
+                if i < len(items_selected){
+                    write_log("Removed items :", item.name)
+                    ordered_remove(items_to_delete, i)
+                    ordered_remove(&db.items, items.find_item_index(db, item))
+                    break 
+                }
+            }
+        }
+        delete_bulk_items(items_to_delete,db)
+    }
 
 save_data :: proc(db: ^items.InventoryDatabase){
     items.save_inventory(file_name, db^) // Save the inventory to the file
