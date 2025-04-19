@@ -185,9 +185,6 @@ log_window :: proc(ctx: ^mu.Context) {
 
 // Renders the edit window
 edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
-    
-   
-
     if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
         @static edit_button_toggle:= "Edit item"  
@@ -206,27 +203,7 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                  
                 
 
-            }            // Item Quantity
-              mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
-              mu.label(ctx, "Item Quantity:")
-              if .SUBMIT in mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3) {
-                mu.set_focus(ctx, ctx.last_id)
-                if single_item {
-                    items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
-                }
             }
-
-            // Remove Button
-            mu.layout_row(ctx, {button_width}, screen_height / 25)
-            if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
-                delete_bulk_items(&items_selected, db)
-            }
-        } else {
-            mu.layout_row(ctx, {label_width}, (screen_height / 3))
-            mu.label(ctx, "No items selected")
-        }
-    }
-}
             
             clear_selected_items()
         }
@@ -296,6 +273,10 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                 submitted2 = (editor_input_text_len_2 > 0)
                 submitted = (editor_input_text_len > 0 )
                 submitted3 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0)
+            }
+            mu.layout_row(ctx, {edit_button_width}, screen_height / 25)
+            if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
+                delete_bulk_items(&items_selected, db)
             }
             if submitted == true {
                 new_name = string(editor_input_text[:editor_input_text_len])
@@ -380,6 +361,7 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                 }
             }
         }
+
     }
 
 }
@@ -437,6 +419,7 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
         }
         delete_bulk_items(items_to_delete,db)
     }
+}
 
 save_data :: proc(db: ^items.InventoryDatabase){
     items.save_inventory(file_name, db^) // Save the inventory to the file
