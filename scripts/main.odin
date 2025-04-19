@@ -31,6 +31,9 @@ editor_input_text_len_2: int
 editor_input_text_3 := make_slice([]u8, 128)
 editor_input_text_len_3: int
 
+editor_input_text_4 := make_slice([]u8, 128)
+editor_input_text_len_4: int
+
 editor_input_num: f32
 editor_input_text_rect: mu.Rect
 
@@ -263,16 +266,18 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
         submitted := false
         submitted2 := false
         submitted3 := false
-        
-
+        submitted4:= false
         new_name := ""
         new_manufacturer := ""
+        new_quantity: i32= 0
+
         mu.layout_row(ctx, {edit_button_width, interface_width/5}, (screen_height/25))
             if .SUBMIT in mu.button(ctx, "Confirm Edits") {
                 // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
                 submitted2 = (editor_input_text_len_2 > 0)
                 submitted = (editor_input_text_len > 0 )
-                submitted3 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0)
+                submitted3 = (editor_input_text_len_3 > 0)
+                submitted4 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0 && editor_input_text_len_3 <= 0)
             }
             mu.layout_row(ctx, {edit_button_width}, screen_height / 25)
             if.SUBMIT in mu.button(ctx, "Delete Selected Items"){
@@ -286,7 +291,7 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                 for &item in db.items{
                     if is_item_selected(item){
                         item.name = new_name
-                        clear_text_inputs()
+                        clear_name_input()
                     }
                 }
             }
@@ -298,16 +303,29 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                 for &item in db.items{
                     if is_item_selected(item){
                         item.manufacturer = new_manufacturer
-                        clear_text_inputs()
+                        clear_manufacturer_input()
                     }
                 }
             }
 
             if submitted3 == true {
+                new_quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
+                write_log("Quantity Changed To:")
+                write_log(string(editor_input_text_3[:editor_input_text_len_3]))
+                editor_input_text_len_3 = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.quantity = new_quantity
+                        clear_manufacturer_input()
+                    }
+                }
+            }
+
+            if submitted4 == true {
             write_log("Error: No inputs found")
             clear(&items_selected)
             }
-                defer if submitted == true || submitted2 == true{
+                defer if submitted == true || submitted2 == true || submitted3 == true{
                 save_data(db)
             }
         }else{
@@ -434,9 +452,13 @@ clear_selected_items :: proc(){
 }
 
 clear_text_inputs :: proc(){
+    clear_name_input()
+    clear_manufacturer_input()
+    clear_quantity_input()
 
-editor_input_text = make_slice([]u8, 128)
-editor_input_text_2 = make_slice([]u8, 128)
-editor_input_text_3 = make_slice([]u8, 128)
 
 }
+clear_name_input :: proc(){editor_input_text = make_slice([]u8, 128)}
+clear_manufacturer_input :: proc(){editor_input_text_2 = make_slice([]u8, 128)}
+clear_quantity_input :: proc(){editor_input_text_3 = make_slice([]u8, 128)}
+
