@@ -34,6 +34,7 @@ editor_input_text_len_3: int
 editor_input_num: f32
 editor_input_text_rect: mu.Rect
 
+
 screen_width := win.GetSystemMetrics(win.SM_CXSCREEN) - 50
 screen_height := win.GetSystemMetrics(win.SM_CYSCREEN) - 100
 
@@ -43,6 +44,7 @@ header_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
 label_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.20)
 interface_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.45)
 button_width := cast(i32)(((cast(f32)screen_width * 0.35) - 10) * 1.0)
+edit_button_width := cast(i32)(((cast(f32)screen_width * 0.45) - 10) * 1.0)
 save_button_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
 checkbox_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.2)
 
@@ -52,6 +54,7 @@ bg: [3]u8 = {90, 95, 100}
 quantity_buffer := make_slice([]u8, 32)
 quantity_str_len: int = 0
 quantity_initialized: bool = false
+checks: [20000]bool = false
 
 // Main entry point
 main :: proc() {
@@ -96,8 +99,7 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     }
 
     if rl.WindowShouldClose(){
-        items.save_inventory(file_name, db^) // Save the inventory to the file
-        fmt.println("data saved to file: ", file_name)
+        save_data(db)
     }
 }
 
@@ -109,7 +111,7 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
-    @static checks: [20000]bool = false // Increase during testing. Current is 20,000 items.
+     // Increase during testing. Current is 20,000 items.
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
@@ -141,16 +143,15 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                             }
                         }
                    }
-
                 } else {
                     fmt.println("Warning: item.id is out of range:", item.id)
                 }
-
+                
                 if .SUBMIT in mu.button(ctx, button_label) {
+                    clear_selected_items()
                     fetch_item(item)
                     write_log(button_label)
                 }
-
             }
         }
     }
@@ -180,87 +181,35 @@ log_window :: proc(ctx: ^mu.Context) {
     }
 }
 
+
+
 // Renders the edit window
 edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
+    
+   
+
     if mu.begin_window(ctx, "Edit window", mu.Rect{0, 0, screen_width / 2, screen_height / 2}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
+        @static edit_button_toggle:= "Edit item"  
+        @static is_adding_new_item: bool = true
 
         // Add a button to create a new item
-        mu.layout_row(ctx, {button_width}, (screen_height / 25))
-        if .SUBMIT in mu.button(ctx, "Add New Item") {
-            // Collect input for the new item
-            new_item_name := "New Item" // Replace with actual input from GUI
-            new_item_manufacturer := "New Manufacturer" // Replace with actual input from GUI
-            new_item_quantity := 10 // Replace with actual input from GUI
-            new_item_price := 5.99 // Replace with actual input from GUI
-            // Input validation. Currently not accessible by GUI because of how Add New Item button works.
-            if new_item_name == "" {
-                write_log("Error: Item name cannot be empty.")
-            } else if new_item_quantity <= 0 {
-                write_log("Error: Quantity must be greater than zero.")
-            } else {
-                success := items.add_item_by_members(db, cast(i32)(new_item_quantity), cast(f32)(new_item_price), new_item_name, new_item_manufacturer)
-                // Handle success or failure
-                if success {
-                    my_builder := strings.builder_make()
-                    defer strings.builder_destroy(&my_builder)
+        mu.layout_row(ctx, {edit_button_width}, (screen_height / 25))
+        if .SUBMIT in mu.button(ctx, edit_button_toggle) {
+            if is_adding_new_item == true{
+                is_adding_new_item = false
+                edit_button_toggle = "Add New Item"
+                
+            }else{
+                is_adding_new_item = true
+                edit_button_toggle = "Edit item"  
+                 
+                
 
-                    strings.write_string(&my_builder, "Added new item: ")
-                    strings.write_string(&my_builder, new_item_name)
-                    write_log(strings.to_string(my_builder))
-                } else {
-                    my_builder := strings.builder_make()
-                    defer strings.builder_destroy(&my_builder)
-
-                    strings.write_string(&my_builder, "Failed to add item: ")
-                    strings.write_string(&my_builder, new_item_name)
-                    strings.write_string(&my_builder, " (duplicate name)")
-                    write_log(strings.to_string(my_builder))
-                    
-                    mu.layout_row(ctx, {button_width}, (screen_height / 25))
-                    mu.label(ctx, "Error: Item with this name already exists!")
-                }
-            }
-        }
-
-        if len(items_selected) > 0 {
-            single_item := len(items_selected) == 1
-
-            mu.layout_row(ctx, {header_width}, (screen_height / 25))
-            my_builder := strings.builder_make()
-            defer strings.builder_destroy(&my_builder)
-
-            strings.write_string(&my_builder, "Edit Item/s: ")
-            for item in items_selected {
-                strings.write_string(&my_builder, " ")
-                strings.write_string(&my_builder, item.name)
-            }
-            mu.label(ctx, strings.to_string(my_builder))
-
-            // Item Name
-            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
-            mu.label(ctx, "Item Name:")
-            if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
-                mu.set_focus(ctx, ctx.last_id)
-                if single_item {
-                    items_selected[0].name = string(editor_input_text[:editor_input_text_len])
-                }
-            }
-
-            // Item Manufacturer
-            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
-            mu.label(ctx, "Item Manufacturer:")
-            if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
-                mu.set_focus(ctx, ctx.last_id)
-                if single_item {
-                    items_selected[0].manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
-                }
-            }
-
-            // Item Quantity
-            mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
-            mu.label(ctx, "Item Quantity:")
-            if .SUBMIT in mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3) {
+            }            // Item Quantity
+              mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+              mu.label(ctx, "Item Quantity:")
+              if .SUBMIT in mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3) {
                 mu.set_focus(ctx, ctx.last_id)
                 if single_item {
                     items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
@@ -277,6 +226,162 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             mu.label(ctx, "No items selected")
         }
     }
+}
+            
+            clear_selected_items()
+        }
+        render_ui(ctx,db,is_adding_new_item)
+
+        // if is_adding_new_item {
+
+        
+
+    }
+}
+
+render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_item: bool ){
+    if !is_adding_new_item { //TODO: add toggle bits here
+        if (len(items_selected) > 0 ){
+        single_item := len(items_selected) == 1
+        mu.layout_row(ctx, {header_width}, (screen_height / 25))
+        my_builder := strings.builder_make()
+        defer strings.builder_destroy(&my_builder)
+
+        strings.write_string(&my_builder, "Edit Item/s: ")
+        for item in items_selected {
+            strings.write_string(&my_builder, " ")
+            strings.write_string(&my_builder, item.name)
+        }
+        mu.label(ctx, strings.to_string(my_builder))
+
+        // Item Name
+        mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+        mu.label(ctx, "Item Name:")
+        if .SUBMIT in mu.textbox(ctx, editor_input_text, &editor_input_text_len) {
+            mu.set_focus(ctx, ctx.last_id)
+            if single_item {
+                items_selected[0].name = string(editor_input_text[:editor_input_text_len])
+            }
+        }
+
+        // Item Manufacturer
+        mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+        mu.label(ctx, "Item Manufacturer:")
+        if .SUBMIT in mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2) {
+            mu.set_focus(ctx, ctx.last_id)
+            if single_item {
+                items_selected[0].manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+            }
+        }
+
+        // Item Quantity
+        mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+        mu.label(ctx, "Item Quantity:")
+        if .SUBMIT in mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3) {
+            mu.set_focus(ctx, ctx.last_id)
+            if single_item {
+                items_selected[0].quantity = cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
+            }
+        }
+        submitted := false
+        submitted2 := false
+        submitted3 := false
+        
+
+        new_name := ""
+        new_manufacturer := ""
+        mu.layout_row(ctx, {edit_button_width, interface_width/5}, (screen_height/25))
+            if .SUBMIT in mu.button(ctx, "Confirm Edits") {
+                // fmt.println("editor 1 len: ", editor_input_text_len,"\neditor2 len: ", editor_input_text_len_2)
+                submitted2 = (editor_input_text_len_2 > 0)
+                submitted = (editor_input_text_len > 0 )
+                submitted3 = (editor_input_text_len <= 0 && editor_input_text_len_2 <= 0)
+            }
+            if submitted == true {
+                new_name = string(editor_input_text[:editor_input_text_len])
+                write_log("Name Changed To:")
+                write_log(new_name)
+                editor_input_text_len = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.name = new_name
+                        clear_text_inputs()
+                    }
+                }
+            }
+            if submitted2 == true {
+                new_manufacturer = string(editor_input_text_2[:editor_input_text_len_2])
+                write_log("Manufacturer Changed To:")
+                write_log(new_manufacturer)
+                editor_input_text_len_2 = 0
+                for &item in db.items{
+                    if is_item_selected(item){
+                        item.manufacturer = new_manufacturer
+                        clear_text_inputs()
+                    }
+                }
+            }
+
+            if submitted3 == true {
+            write_log("Error: No inputs found")
+            clear(&items_selected)
+            }
+                defer if submitted == true || submitted2 == true{
+                save_data(db)
+            }
+        }else{
+
+            mu.layout_row(ctx, {label_width}, (screen_height / 3))
+            mu.label(ctx, "No items selected")
+        }
+
+    }else{
+        mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+        mu.label(ctx, "Item Name:")
+        mu.textbox(ctx, editor_input_text, &editor_input_text_len)
+
+        mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+        mu.label(ctx, "Manufacturer:")
+        mu.textbox(ctx, editor_input_text_2, &editor_input_text_len_2)
+
+        mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
+        mu.label(ctx, "Quantity:")
+        mu.textbox(ctx, editor_input_text_3, &editor_input_text_len_3)
+
+        mu.layout_row(ctx, {button_width}, (screen_height / 25))
+        if .SUBMIT in mu.button(ctx, "Confirm") {
+            new_item_name := string(editor_input_text[:editor_input_text_len])
+            new_item_manufacturer := string(editor_input_text_2[:editor_input_text_len_2])
+            new_item_quantity := cast(i32)(strconv.atoi(string(editor_input_text_3[:editor_input_text_len_3])))
+
+            if new_item_name == "" {
+                write_log("Error: Item name cannot be empty.")
+            } else if new_item_quantity <= 0 {
+                write_log("Error: Quantity must be greater than zero.")
+            } else {
+                success := items.add_item_by_members(db, new_item_quantity, 0.0, new_item_name, new_item_manufacturer)
+                if success {
+                    my_builder := strings.builder_make()
+                    defer strings.builder_destroy(&my_builder)
+
+                    strings.write_string(&my_builder, "Added new item: ")
+                    strings.write_string(&my_builder, new_item_name)
+                    write_log(strings.to_string(my_builder))
+                    save_data(db)
+                    clear_text_inputs()
+
+                } else {
+                    my_builder := strings.builder_make()
+                    defer strings.builder_destroy(&my_builder)
+
+                    strings.write_string(&my_builder, "Error: Item with this name already exists: ")
+                    strings.write_string(&my_builder, new_item_name)
+                    write_log(strings.to_string(my_builder))
+                }
+            }
+        }
+    }
+
 }
 
 // Logs a message to the log window
@@ -332,4 +437,23 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
         }
         delete_bulk_items(items_to_delete,db)
     }
+
+save_data :: proc(db: ^items.InventoryDatabase){
+    items.save_inventory(file_name, db^) // Save the inventory to the file
+    write_log("data saved to file: ", file_name)// Pass the address of `db`
+}
+
+clear_selected_items :: proc(){
+    clear(&items_selected)
+    for &check in checks{
+        check = false
+    }
+}
+
+clear_text_inputs :: proc(){
+
+editor_input_text = make_slice([]u8, 128)
+editor_input_text_2 = make_slice([]u8, 128)
+editor_input_text_3 = make_slice([]u8, 128)
+
 }
