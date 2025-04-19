@@ -428,9 +428,12 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
         for &item, i in items_to_delete{
             if is_item_selected(item){
                 if i < len(items_selected){
-                    write_log("Removed items :", item.name)
-                    ordered_remove(items_to_delete, i)
-                    ordered_remove(&db.items, items.find_item_index(db, item))
+                    item_index:= items.find_item_index(db, item)
+                    if item_index != -1{
+                        write_log("Removed items :", item.name)
+                        ordered_remove(items_to_delete, i)
+                        ordered_remove(&db.items, item_index)
+                    }
                     break 
                 }
             }

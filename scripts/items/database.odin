@@ -151,8 +151,8 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
 }
 
 find_item_index:: proc(db: ^InventoryDatabase, item :Item) -> int{
-    for item, i in db.items {
-        if item.id == item.id{
+    for db_item, i in db.items {
+        if db_item.id == item.id{
             return i
         }
     }
