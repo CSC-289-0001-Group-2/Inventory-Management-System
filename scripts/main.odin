@@ -49,7 +49,8 @@ interface_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.45)
 button_width := cast(i32)(((cast(f32)screen_width * 0.35) - 10) * 1.0)
 edit_button_width := cast(i32)(((cast(f32)screen_width * 0.45) - 10) * 1.0)
 save_button_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 1.0)
-checkbox_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.2)
+checkbox_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.075)
+delete_width := cast(i32)(((cast(f32)screen_width * 0.5) - 10) * 0.2)
 
 bg: [3]u8 = {90, 95, 100}
 
@@ -108,20 +109,20 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
 
 // Initializes all sub-windows
 initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
-    button_window(ctx, db^)
+    button_window(ctx, db)
     edit_window(ctx, db)
     log_window(ctx)
 }
 
-button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
+button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
      // Increase during testing. Current is 20,000 items.
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
 
-        for item in db.items {
+        for item , i in db.items {
             if item.name != "" {
-                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 15))
+                mu.layout_row(ctx, {checkbox_width, button_width, delete_width}, (screen_height / 15))
                 button_label := items.initialize_label(item)
 
                 // Ensure item.id is within the valid range of the `checks` array
@@ -154,6 +155,13 @@ button_window :: proc(ctx: ^mu.Context, db: items.InventoryDatabase) {
                     clear_selected_items()
                     fetch_item(item)
                     write_log(button_label)
+                }
+                // mu.layout_row(ctx, {checkbox_width, button_width, delete_width}, (screen_height / 15))
+                delete_label := strings.builder_make()
+                strings.write_string(&delete_label,"Delete:  ")
+                strings.write_int(&delete_label,i)
+                if .SUBMIT in mu.button(ctx, strings.to_string(delete_label)) {
+                    delete_individual_item(item, db)
                 }
             }
         }
@@ -433,6 +441,14 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
         }
         delete_bulk_items(items_to_delete,db)
     }
+}
+
+delete_individual_item :: proc(item_to_delete: items.Item, db: ^items.InventoryDatabase){
+    item_index:= items.find_item_index(db, item_to_delete)
+    if item_index != -1{
+        write_log("Removed items :", item_to_delete.name)
+        ordered_remove(&db.items, item_index)
+    }   
 }
 
 save_data :: proc(db: ^items.InventoryDatabase){
