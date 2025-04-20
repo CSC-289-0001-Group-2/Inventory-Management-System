@@ -203,19 +203,12 @@ edit_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
             }else{
                 is_adding_new_item = true
                 edit_button_toggle = "Edit item"  
-                 
-                
 
             }
             
             clear_selected_items()
         }
         render_ui(ctx,db,is_adding_new_item)
-
-        // if is_adding_new_item {
-
-        
-
     }
 }
 
@@ -316,7 +309,7 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                 for &item in db.items{
                     if is_item_selected(item){
                         item.quantity = new_quantity
-                        clear_manufacturer_input()
+                        clear_quantity_input()
                     }
                 }
             }
