@@ -124,7 +124,7 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 
         for item , i in db.items {
             if item.name != "" {
-                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 15))
+                mu.layout_row(ctx, {checkbox_width, button_width,delete_width}, (screen_height / 15))
                 button_label := items.initialize_label(item)
 
                 // Ensure item.id is within the valid range of the `checks` array
