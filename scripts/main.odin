@@ -124,7 +124,7 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 
         for item , i in db.items {
             if item.name != "" {
-                mu.layout_row(ctx, {checkbox_width, button_width, delete_width}, (screen_height / 15))
+                mu.layout_row(ctx, {checkbox_width, button_width}, (screen_height / 15))
                 button_label := items.initialize_label(item)
 
                 // Ensure item.id is within the valid range of the `checks` array
@@ -518,8 +518,20 @@ clear_text_inputs :: proc(){
     clear_quantity_input()
     clear_price_input()
 }
-clear_name_input :: proc(){editor_input_text = make_slice([]u8, 128)}
-clear_manufacturer_input :: proc(){editor_input_text_2 = make_slice([]u8, 128)}
-clear_quantity_input :: proc(){editor_input_text_3 = make_slice([]u8, 128)}
-clear_price_input :: proc(){editor_input_text_4 = make_slice([]u8, 128)}
+clear_name_input :: proc(){
+    editor_input_text = make_slice([]u8, 128)
+    editor_input_text_len = 0
+}
+clear_manufacturer_input :: proc(){
+    editor_input_text_2 = make_slice([]u8, 128)
+    editor_input_text_len_2 = 0
+}
+clear_quantity_input :: proc(){
+    editor_input_text_3 = make_slice([]u8, 128)
+    editor_input_text_len_3 = 0
+}
+clear_price_input :: proc(){
+    editor_input_text_4 = make_slice([]u8, 128)
+    editor_input_text_len_4 = 0
+}
 
