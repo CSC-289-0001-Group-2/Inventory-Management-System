@@ -160,8 +160,9 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                 }
                 // mu.layout_row(ctx, {checkbox_width, button_width, delete_width}, (screen_height / 15))
                 delete_label := strings.builder_make()
-                strings.write_string(&delete_label,"Delete:  ")
-                strings.write_int(&delete_label,i)
+                defer strings.builder_destroy(&delete_label) // Ensure the builder is destroyed to prevent memory leaks
+                strings.write_string(&delete_label, "Delete:  ")
+                strings.write_int(&delete_label, i)
                 if .SUBMIT in mu.button(ctx, strings.to_string(delete_label)) {
                     delete_individual_item(item, db)
                 }
