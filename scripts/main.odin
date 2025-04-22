@@ -13,6 +13,7 @@ import mu "vendor:microui"
 import win "core:sys/windows"
 import virtual "core:mem/virtual"
 import "core:strconv"
+import "base:runtime"
 
 // Global variables
 log_sb := strings.builder_make()
@@ -93,8 +94,10 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     rl.InitWindow(screen_width, screen_height, "Inventory Management UI")
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
-
+    context.allocator = context.temp_allocator
     for !rl.WindowShouldClose() {
+        runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
+
         rl.BeginDrawing()
         defer rl.EndDrawing()
         rl.ClearBackground({bg.r, bg.g, bg.b, 255})
