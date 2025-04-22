@@ -17,6 +17,7 @@ import "base:runtime"
 
 // Global variables
 log_sb := strings.builder_make()
+edit_sb := strings.builder_make()
 log_updated := false
 items_selected: [dynamic]items.Item
 file_name := "inventory.dat"
@@ -94,9 +95,9 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     rl.InitWindow(screen_width, screen_height, "Inventory Management UI")
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
-    context.allocator = context.temp_allocator
+    //context.allocator = context.temp_allocator
     for !rl.WindowShouldClose() {
-        runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
+    //    runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
 
         rl.BeginDrawing()
         defer rl.EndDrawing()
@@ -128,7 +129,8 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
         for item , i in db.items {
             if item.name != "" {
                 mu.layout_row(ctx, {checkbox_width, button_width,delete_width}, (screen_height / 15))
-                button_label := items.initialize_label(item)
+                // button_label := items.initialize_label(item)
+                button_label := item.label
 
                 // Ensure item.id is within the valid range of the `checks` array
                 if item.id >= 0 && item.id < len(checks) {
@@ -240,9 +242,10 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
         if (len(items_selected) > 0 ){
             single_item := len(items_selected) == 1
             mu.layout_row(ctx, {header_width}, (screen_height / 25))
+            
             my_builder := strings.builder_make()
             defer strings.builder_destroy(&my_builder)
-
+            
             strings.write_string(&my_builder, "Edit Item/s: ")
             for item in items_selected {
                 strings.write_string(&my_builder, " ")

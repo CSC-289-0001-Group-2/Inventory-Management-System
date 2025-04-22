@@ -18,8 +18,9 @@ Item :: struct {
     price: f32,
     name: string,
     manufacturer: string,
+	label: string,
 }
-#assert(size_of(Item) == 8 + 4 + 4 + 16 + 16)
+#assert(size_of(Item) == 8 + 4 + 4 + 16 + 16 + 16)
 
 serialize_inventory :: proc(buf: ^bytes.Buffer, database: InventoryDatabase) {
 	// Serialize the number of items in the array. Use explicit Little Endian encoding.
@@ -69,6 +70,7 @@ deserialize_inventory :: proc(data: []u8) -> (database: InventoryDatabase, ok: b
 		deserialize(&data, &item.price)        or_return
 		deserialize(&data, &item.name)         or_return
 		deserialize(&data, &item.manufacturer) or_return
+		item.label = initialize_label(item) // Initialize the label for the item
 
 		append(&database.items, item)
 	}
