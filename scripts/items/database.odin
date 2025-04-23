@@ -116,7 +116,7 @@ sell_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> boo
     }
 
     if item.quantity < quantity {
-        fmt.println("Error: Not enough stock for the item", name, "- Requested:", quantity, "Available:", item.quantity)
+        fmt.println("Error: Not enough stock for the item", name, "to be sold", "- Requested:", quantity, "Available:", item.quantity)
         return false
     }
 
