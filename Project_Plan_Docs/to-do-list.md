@@ -62,17 +62,49 @@
   - Donovan
   - Kameron
 
-##### add item addition/deletion button:
+- Subtasks:
+  1. edit bulk items:
+    - :arrows_counterclockwise: status: In-Progress
+    - contributors:
+      - Robert
+      - Donovan
+
+  2. get the add item button to open a new interface in the edit window:
+    - :arrows_counterclockwise: status: In-Progress
+    - contributors: 
+      - CJ
+
+  3. get the add item interface to be functional:
+    - :arrows_counterclockwise: status: In-Progress
+    - contributors: 
+      - CJ
+  
+  4. delete individual items:
+    - :arrows_counterclockwise: status: In-Progress
+    - contributors: 
+      - Ethan
+
+
+  5. delete bulk items:
+    - :arrows_counterclockwise: status: In-Progress
+    - contributors: 
+      - Robert
+
+  6. cleanup:
+      - :no_entry_sign: status: NO-Progress
+      - contributors: NONE
+
+##### add item button:
+- :arrow_forward: in-Progress
+- contributors: CJ
+
+##### delete item button:
 - :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
 ## priority 2:
 ---
 ### add method to search through items in button window by manufacturer/name/quantity etc.
-- :no_entry_sign: status: NO-Progress
-- contributors: NONE
-
-### add bulk actions (selecting multiple items to edit, or delete)
 - :no_entry_sign: status: NO-Progress
 - contributors: NONE
 
