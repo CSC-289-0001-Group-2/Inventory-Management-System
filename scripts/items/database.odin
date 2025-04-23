@@ -141,7 +141,7 @@ restock_product :: proc(db: ^InventoryDatabase, name: string, quantity: i32) -> 
 
     item.quantity += quantity
     log_operation("Restocked", item^)
-    fmt.println("Restocked", quantity, "unit(s) of", name, "- New stock:", item.quantity)
+    fmt.println("Restocked", quantity, "unit(s) of", name, "Previous stock", item.quantity - quantity, "- New stock:", item.quantity)
     return true
 }
 
