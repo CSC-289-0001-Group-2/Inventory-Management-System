@@ -166,8 +166,8 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                 // mu.layout_row(ctx, {checkbox_width, button_width, delete_width}, (screen_height / 15))
                 delete_label := strings.builder_make()
                 defer strings.builder_destroy(&delete_label) // Ensure the builder is destroyed to prevent memory leaks
-                strings.write_string(&delete_label, "Delete:  ")
-                strings.write_int(&delete_label, i)
+                strings.write_string(&delete_label, "Delete Item:  ")
+                strings.write_int(&delete_label, (i+1))
                 if .SUBMIT in mu.button(ctx, strings.to_string(delete_label)) {
                     delete_individual_item(&item, db)
                 }
@@ -517,7 +517,7 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
 delete_individual_item :: proc(item_to_delete: ^items.Item, db: ^items.InventoryDatabase){
     item_index:= items.find_item_index(db, item_to_delete^)
     if item_index != -1{
-        write_log("Removed items :", item_to_delete.name)
+        write_log("Removed item :", item_to_delete.name)
         free_item(item_to_delete)
         ordered_remove(&db.items, item_index)
     }   
