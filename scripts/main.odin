@@ -13,9 +13,11 @@ import mu "vendor:microui"
 import win "core:sys/windows"
 import virtual "core:mem/virtual"
 import "core:strconv"
+import "base:runtime"
 
 // Global variables
 log_sb := strings.builder_make()
+edit_sb := strings.builder_make()
 log_updated := false
 items_selected: [dynamic]items.Item
 file_name := "inventory.dat"
@@ -93,8 +95,10 @@ initialize_window :: proc(db: ^items.InventoryDatabase) {
     rl.InitWindow(screen_width, screen_height, "Inventory Management UI")
 
     ctx := rlmu.init_scope() // same as calling, `rlmu.init(); defer rlmu.destroy()`
-
+    //context.allocator = context.temp_allocator
     for !rl.WindowShouldClose() {
+    //    runtime.DEFAULT_TEMP_ALLOCATOR_TEMP_GUARD()
+
         rl.BeginDrawing()
         defer rl.EndDrawing()
         rl.ClearBackground({bg.r, bg.g, bg.b, 255})
@@ -122,10 +126,11 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
 
-        for item , i in db.items {
+        for &item , i in db.items {
             if item.name != "" {
                 mu.layout_row(ctx, {checkbox_width, button_width,delete_width}, (screen_height / 15))
-                button_label := items.initialize_label(item)
+                // button_label := items.initialize_label(item)
+                button_label := item.label
 
                 // Ensure item.id is within the valid range of the `checks` array
                 if item.id >= 0 && item.id < len(checks) {
@@ -161,10 +166,10 @@ button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
                 // mu.layout_row(ctx, {checkbox_width, button_width, delete_width}, (screen_height / 15))
                 delete_label := strings.builder_make()
                 defer strings.builder_destroy(&delete_label) // Ensure the builder is destroyed to prevent memory leaks
-                strings.write_string(&delete_label, "Delete:  ")
-                strings.write_int(&delete_label, i)
+                strings.write_string(&delete_label, "Delete Item:  ")
+                strings.write_int(&delete_label, (i+1))
                 if .SUBMIT in mu.button(ctx, strings.to_string(delete_label)) {
-                    delete_individual_item(item, db)
+                    delete_individual_item(&item, db)
                 }
             }
         }
@@ -237,9 +242,10 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
         if (len(items_selected) > 0 ){
             single_item := len(items_selected) == 1
             mu.layout_row(ctx, {header_width}, (screen_height / 25))
+            
             my_builder := strings.builder_make()
             defer strings.builder_destroy(&my_builder)
-
+            
             strings.write_string(&my_builder, "Edit Item/s: ")
             for item in items_selected {
                 strings.write_string(&my_builder, " ")
@@ -277,6 +283,7 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                 }
             }
 
+            // Item Price
             mu.layout_row(ctx, {label_width, interface_width}, (screen_height / 25))
             mu.label(ctx, "Item Price:")
             if .SUBMIT in mu.textbox(ctx, editor_input_text_4, &editor_input_text_len_4) {
@@ -345,6 +352,7 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                         }
                     }
                 }
+
                 if submitted4 == true {
                     new_price = cast(f32)(strconv.atoi(string(editor_input_text_4[:editor_input_text_len_4])))
                     write_log("Price Changed To:")
@@ -359,6 +367,18 @@ render_ui :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase, is_adding_new_
                         }
                     }
                 }
+
+                if submitted == true || submitted2 == true || submitted3 == true || submitted4 == true {
+                    for &item in db.items{
+                        if is_item_selected(item){
+                            delete(item.label)
+                            item.label = items.initialize_label(item) // Reinitialize the label for the item
+                            write_log("Changes saved")
+                        }
+                    }
+                }
+                
+                
                 if submitted5 == true {
                 write_log("Error: No inputs found")
                 clear(&items_selected)
@@ -482,6 +502,7 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
                     item_index:= items.find_item_index(db, item)
                     if item_index != -1{
                         write_log("Removed items :", item.name)
+                        free_item(&item)
                         ordered_remove(items_to_delete, i)
                         ordered_remove(&db.items, item_index)
                     }
@@ -493,12 +514,19 @@ delete_bulk_items :: proc(items_to_delete: ^[dynamic]items.Item, db: ^items.Inve
     }
 }
 
-delete_individual_item :: proc(item_to_delete: items.Item, db: ^items.InventoryDatabase){
-    item_index:= items.find_item_index(db, item_to_delete)
+delete_individual_item :: proc(item_to_delete: ^items.Item, db: ^items.InventoryDatabase){
+    item_index:= items.find_item_index(db, item_to_delete^)
     if item_index != -1{
-        write_log("Removed items :", item_to_delete.name)
+        write_log("Removed item :", item_to_delete.name)
+        free_item(item_to_delete)
         ordered_remove(&db.items, item_index)
     }   
+}
+
+free_item :: proc(item_to_delete: ^items.Item){
+    delete(item_to_delete.name)
+    delete(item_to_delete.manufacturer)
+    delete(item_to_delete.label)
 }
 
 save_data :: proc(db: ^items.InventoryDatabase){
