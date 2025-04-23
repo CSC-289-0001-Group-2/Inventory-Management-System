@@ -121,7 +121,6 @@ initialize_sub_windows :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
 }
 
 button_window :: proc(ctx: ^mu.Context, db: ^items.InventoryDatabase) {
-     // Increase during testing. Current is 20,000 items.
 
     if mu.begin_window(ctx, "Inventory List", mu.Rect{screen_width / 2, 0, screen_width / 2, screen_height}, {.EXPANDED, .NO_CLOSE, .NO_RESIZE}) {
         defer mu.end_window(ctx)
