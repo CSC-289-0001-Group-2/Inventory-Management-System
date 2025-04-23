@@ -275,17 +275,18 @@ addBenchmark :: proc(db: ^InventoryDatabase, amount: int) {
 
 initialize_label :: proc(item: Item) -> string {
     my_builder:= strings.builder_make()
-    strings.write_int(&my_builder,cast(int)item.id)
-    strings.write_string(&my_builder,"  :id  ")
+    // strings.write_int(&my_builder,cast(int)item.id)
+    // strings.write_string(&my_builder,"  :id  ")
     strings.write_string(&my_builder,item.name)
-    strings.write_string(&my_builder,"  x  ")
+    strings.write_string(&my_builder,"  |  Quantity: ")
     strings.write_int(&my_builder, cast(int)item.quantity)
-    strings.write_string(&my_builder,"       $")
+    strings.write_string(&my_builder," |  Price:  $")
     fmt.sbprintf(&my_builder,"%.2f",item.price)
-    strings.write_string(&my_builder," total price: ")
-    strings.write_string(&my_builder,"     $")
+    // strings.write_string(&my_builder," Total Price: ")
+    // strings.write_string(&my_builder,"     $")
+    strings.write_string(&my_builder," |  Total Value:  $")
     fmt.sbprintf(&my_builder, "%.2f", item.price*cast(f32)(item.quantity))
-    strings.write_string(&my_builder,"    ")
+    strings.write_string(&my_builder," |  Manufacturer: ")
     strings.write_string(&my_builder,item.manufacturer)
     return strings.to_string(my_builder) // Convert the builder's contents to a string
 }
