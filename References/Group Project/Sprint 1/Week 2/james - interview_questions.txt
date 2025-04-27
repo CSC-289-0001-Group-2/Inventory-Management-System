@@ -1,0 +1,30 @@
+Questions
+1. What is your current work process?
+	- Book concerts on a small scale (venues of 400 or less)
+	- Book shows on behalf of the venue
+	- Find available bands
+	- Is also a booking agent for a rock band in Raleigh
+	- They send available dates
+	- Put bands in venues
+2. What parts of your process are the most time-consuming/inefficient?
+	- Slow communication with bands and venues
+3. What are, if any, your most frequently encountered problems?
+	- Booking unprofitable shows/extremely thin profit margins
+4. Of these problems, which would you say is the most concerning or harmful to your work?
+	- Same as above
+5. What specific features would you like to see in our program?
+	- Know which local bands have the best draw
+	- Who is the most popular/most ticket-sales
+	- Scrape more than one website at a time
+6. Which features would you consider most important?
+	- Ability to know which bands are going to maximize ticket sales
+7. How would these features improve your workflow?
+	- Able to calculate how many ticket sales we would bring in
+	- What prices bring the most people out
+8. Are there any other concerns that you would like to share?
+	- Know how influential the venue is to the customer's ticket-purchasing decision
+	- Different for different venues
+	- Owner is important
+	- Venue quality and popularity
+	- More influential > customer reviews
+	- Able to turn the tool into a website others could pay to use

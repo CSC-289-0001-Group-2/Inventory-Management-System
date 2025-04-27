@@ -1,0 +1,52 @@
+To-Do
+Focus is on "project selection and development plan"
+Review sprint 1 week 2 materials
+
+
+
+
+
+
+
+make a list of project requirements
+- scrape venue website in Raleigh / Durham / Cary
+- have final product be a desktop icon to click on
+--stakeholder wants final product to be a desktop icon he can double click. stakeholder currently has a .bat file that runs scripts from R, Python, and Excel simultaneously.
+
+
+
+
+
+
+
+Explain the need for Denormalization in our database
+-UPPER and LOWER PARAMETERS
+
+
+
+Turn Excel spreadsheet Entity Relationship diagram -> Eventual SQL conversion
+- Can be hand drawn instead of Lucid Chart or alternative
+-- James
+
+
+
+
+Software Architecture
+Are we currently following a Software Architecture pattern? If not, give the application a clean and well-known structure.
+-identify UI patterns in use (ask CJ probing questions to determine)
+--should we follow the MVP, MVVM, or MVC pattern?
+--- Fatima
+
+
+Make UML diagram for how data is sourced and manipulated throughout the program
+- Sha
+
+
+Resources:
+Excel
+Python
+R
+.txt
+.bat
+.py
+.xlsx

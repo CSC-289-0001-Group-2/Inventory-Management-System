@@ -1,0 +1,9 @@
+rolling backlog
+create a Venue Class that our web scrapers inherit traits from
+
+
+if OOD exists in current Python structure: 
+	detail how it is being used currently
+else: 
+	find a way to include OOD if not already in place
+	- encapsulation, abstraction, inheritance, polymorphism, composition

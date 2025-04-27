@@ -1,0 +1,35 @@
+NOTE:
+Change the filepath accordingly to wherever you save the Excel file.
+When this script completes the .xlsx file will open.
+FYI, it still takes this script a few minutes to complete, even after I removed 3/4 of the database.
+
+
+if (!requireNamespace("openxlsx", quietly = TRUE)) {
+  install.packages("openxlsx")
+}
+library(openxlsx)
+Booking_Shows_Forecast <- read.xlsx("C:/Users/cjcor/OneDrive/Desktop/SampleDatabase.xlsx", sheet = "Use in R")
+variable_names <- names(Booking_Shows_Forecast)[-1]
+formula_str <- paste("Y ~ 1 +", paste(variable_names, collapse = " + "))
+mlr.today <- lm(formula_str, data = Booking_Shows_Forecast)
+options(max.print = 30000)
+booking_summary_text <- capture.output(summary(mlr.today))
+writeLines(booking_summary_text, "booking_summary.txt")
+rm(Booking_Shows_Forecast, variable_names, formula_str, mlr.today)
+gc()
+excel_file_path <- "C:/Users/cjcor/OneDrive/Desktop/SampleDatabase.xlsx"
+summary_lines <- readLines("booking_summary.txt")
+summary_extract <- summary_lines[11:length(summary_lines)]
+rm(summary_lines)
+gc()
+wb <- loadWorkbook(excel_file_path)
+if (!"Ranking" %in% names(wb)) {
+  addWorksheet(wb, "Ranking")
+}
+writeData(wb, "Ranking", summary_extract, startCol = 1, startRow = 1)
+rm(summary_extract)
+gc()
+saveWorkbook(wb, excel_file_path, overwrite = TRUE)
+rm(wb)
+gc()
+shell.exec(excel_file_path)
